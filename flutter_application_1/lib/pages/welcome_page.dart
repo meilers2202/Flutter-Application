@@ -154,7 +154,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 padding: const EdgeInsets.all(20.0),
                 child: InkWell(
                   onTap: () {
-                    Navigator.of(context).push(
+                    Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (context) => RegisterPage(toggleTheme: widget.toggleTheme),
                       ),

@@ -61,6 +61,206 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  Future<void> _fetchAndShowTeams() async {
+    // Lokale IP-Adresse für die Kommunikation mit dem Server
+    const String ipAddress = 'localhost';
+    final url = Uri.parse('http://$ipAddress/get_all_teams.php'); // URL zur Abfrage aller Teams
+
+    try {
+      // Sende eine GET-Anfrage an den Server, um alle Teams zu erhalten
+      final response = await http.post(url);
+
+      // Dekodiere die JSON-Antwort vom Server
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (data['success'] == true) {
+        // Wandle die empfangene Liste von Teams in eine Dart-Liste um
+        final List<Map<String, dynamic>> teams = List<Map<String, dynamic>>.from(data['teams']);
+        
+        // Überprüfe, ob das Widget noch montiert ist, bevor der Dialog angezeigt wird
+        if (mounted) {
+          _showTeamsManagementDialog(teams);
+        }
+      } else {
+        // Wenn die Anfrage fehlschlägt, zeige einen Fehler an
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
+      }
+    } catch (e) {
+      // Behandle Verbindungs- oder andere Fehler
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler: $e')),
+      );
+    }
+  }
+
+  void _showTeamsManagementDialog(List<Map<String, dynamic>> teams) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Teamverwaltung'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Liste der Teams
+                ...teams.map((team) {
+                  return ListTile(
+                    title: Text(team['teamName']),
+                    subtitle: Text('${team['memberCount']} Mitglieder'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        // Funktion zum Löschen eines Teams aufrufen
+                        _deleteTeam(team['teamName']);
+                      },
+                    ),
+                  );
+                }).toList(),
+                // Button zum Hinzufügen eines neuen Teams
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Schließe den aktuellen Dialog
+                    _addTeamDialog(); // Öffne den Dialog zum Hinzufügen
+                  },
+                  child: const Text('Team hinzufügen'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _addTeamDialog() async {
+    final TextEditingController teamNameController = TextEditingController();
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Team hinzufügen'),
+          content: TextField(
+            controller: teamNameController,
+            decoration: const InputDecoration(hintText: "Teamname eingeben"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Hinzufügen'),
+              onPressed: () {
+                final newTeamName = teamNameController.text.trim();
+                if (newTeamName.isNotEmpty) {
+                  // Sende die Anfrage, um das Team hinzuzufügen
+                  _addTeam(newTeamName);
+                  Navigator.of(context).pop(); // Schließe den Dialog
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addTeam(String teamName) async {
+    const String ipAddress = 'localhost';
+    final url = Uri.parse('http://$ipAddress/add_team.php');
+
+    try {
+      final response = await http.post(
+        url,
+        body: {'teamName': teamName},
+      );
+
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'])),
+      );
+
+      // Aktualisiere die Teamliste nach erfolgreichem Hinzufügen
+      if (data['success'] == true) {
+        _fetchAndShowTeams();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteTeam(String teamName) async {
+    const String ipAddress = 'localhost';
+    final url = Uri.parse('http://$ipAddress/delete_team.php');
+
+    // Bestätigungsdialog für das Löschen anzeigen
+    final bool? confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Team löschen?'),
+          content: Text('Möchten Sie das Team "$teamName" wirklich löschen?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Löschen', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmDelete == true) {
+      try {
+        final response = await http.post(
+          url,
+          body: {'teamName': teamName},
+        );
+
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
+
+        if (data['success'] == true) {
+          // Schließe den aktuellen Dialog, der die Teamliste anzeigt
+          if (mounted) Navigator.of(context).pop();
+
+          // Öffne den neuen Dialog mit der aktualisierten Liste
+          _fetchAndShowTeams();
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verbindungsfehler: $e')),
+        );
+      }
+    }
+  }
+
   // Funktion zum Anzeigen des Dialogs
   void _showTeamDialog(String teamName, List<String> members) {
     showDialog(
@@ -227,6 +427,22 @@ class _MainPageState extends State<MainPage> {
                   ),
                   child: const Icon(
                     Icons.group,
+                    color: Colors.white,
+                    size: 50,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: _fetchAndShowTeams, // Der neue Aufruf
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB((255 * 0.4).round(), 55, 99, 5),
+                    minimumSize: const Size(100, 100),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: const Icon(
+                    Icons.group_add,
                     color: Colors.white,
                     size: 50,
                   ),

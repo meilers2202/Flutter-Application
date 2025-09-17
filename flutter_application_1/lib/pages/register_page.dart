@@ -38,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     // Navigiere zum zweiten Screen und übergebe die Daten
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => PersonalDataPage(
           username: _usernameController.text,
@@ -111,7 +111,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       padding: const EdgeInsets.all(20.0),
                       child: InkWell(
                         onTap: () {
-                          Navigator.of(context).pushNamed('/login');
+                          Navigator.of(context).pushReplacementNamed('/login');
                         },
                         child: Text(
                           "Zum Login",
