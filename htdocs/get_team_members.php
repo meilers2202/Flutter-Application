@@ -46,7 +46,7 @@ $stmt->close();
 
 // Jetzt die Benutzernamen abrufen, die diese group_id haben
 $stmt = $conn->prepare("SELECT username FROM users WHERE group_id = ?");
-$stmt->bind_param("s", $groupId); // s = string
+$stmt->bind_param("i", $groupId); // 'i' für Integer
 $stmt->execute();
 $result = $stmt->get_result();
 
