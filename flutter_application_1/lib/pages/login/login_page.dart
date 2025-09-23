@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 // Importiere die RegisterPage, da WelcomePage darauf navigiert
-import 'package:flutter_application_1/pages/register_page.dart';
+import 'package:flutter_application_1/pages/login/register_page.dart';
 // Du musst den Pfad zu deiner App anpassen, falls er anders ist!
 
 class WelcomePage extends StatefulWidget {
@@ -54,7 +54,6 @@ class _WelcomePageState extends State<WelcomePage> {
       final Map<String, dynamic> data = json.decode(response.body);
 
       if (data['success'] == true) {
-        // Die erhaltenen Daten an die MyApp-Klasse übergeben
         widget.setUserData(
           username: username,
           email: data['email'],

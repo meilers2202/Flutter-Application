@@ -1,29 +1,31 @@
 import 'package:flutter/material.dart';
-
-// Importiere alle Seiten-Dateien aus deinem 'pages'-Ordner
-import 'package:flutter_application_1/pages/welcome_page.dart';
-import 'package:flutter_application_1/pages/register_page.dart';
-import 'package:flutter_application_1/pages/personaldata_page.dart';
-import 'package:flutter_application_1/pages/main_page.dart';
-import 'package:flutter_application_1/pages/profile_page.dart';
-import 'package:flutter_application_1/pages/settings_page.dart';
+import 'package:flutter_application_1/pages/login/login_page.dart'; // Hinzugefügt
+import 'package:flutter_application_1/pages/login/register_page.dart';
+import 'package:flutter_application_1/pages/login/register_personaldata_page.dart';
+import 'package:flutter_application_1/pages/user_pages/main_page/main_page.dart';
+import 'package:flutter_application_1/pages/user_pages/main_page/all_teams_page/all_teams_page.dart';
+import 'package:flutter_application_1/pages/user_pages/main_page/all_teams_page/join_team_page/join_team_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/profile_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/settings_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/admin_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/user_management_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/block_list_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/field_owner_list.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/teams_management_page.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_login.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_pages/field_owner_main.dart';
 
 void main() => runApp(const MyApp());
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
-
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  // Benutzerdaten als Instanzvariablen speichern
   String? _currentUsername;
-  String? _setEmail;
-  String? _setCity;
   String? _setTeam;
-  String? _setMemberSince;
   ThemeMode _themeMode = ThemeMode.light;
   String? _setRole;
 
@@ -33,7 +35,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // Methode, um die Benutzerdaten zu aktualisieren
   void _setUserData({
     required String username,
     String? email,
@@ -41,13 +42,11 @@ class _MyAppState extends State<MyApp> {
     String? team,
     String? memberSince,
     String? role,
+    String? teamrole,
   }) {
     setState(() {
       _currentUsername = username;
-      _setEmail = email;
-      _setCity = city;
       _setTeam = team;
-      _setMemberSince = memberSince;
       _setRole = role;
     });
   }
@@ -55,6 +54,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
@@ -87,38 +87,55 @@ class _MyAppState extends State<MyApp> {
           titleMedium: TextStyle(color: Colors.white),
         ),
       ),
-      home: WelcomePage(
-        toggleTheme: _toggleTheme,
-        setUserData: _setUserData,
-      ),
+      initialRoute: '/login',
       routes: {
         '/login': (context) => WelcomePage(
-              toggleTheme: _toggleTheme,
-              setUserData: _setUserData,
-            ),
+          toggleTheme: _toggleTheme,
+          setUserData: _setUserData,
+        ),
         '/register': (context) => RegisterPage(
-              toggleTheme: _toggleTheme,
-            ),
+          toggleTheme: _toggleTheme,
+        ),
         '/personalData': (context) => const PersonalDataPage(
-              username: '',
-              password: '',
-            ),
+          username: '',
+          password: '',
+        ),
         '/main': (context) => MainPage(
-              toggleTheme: _toggleTheme,
-              userRole: _setRole,
-              userTeam: _setTeam,
-            ),
-        // Daten als Argumente an die Profilseite übergeben
-        '/profile': (context) => ProfilePage(
-              username: _currentUsername,
-              email: _setEmail,
-              city: _setCity,
-              team: _setTeam,
-              memberSince: _setMemberSince,
-            ),
+          toggleTheme: _toggleTheme,
+          userRole: _setRole,
+          userTeam: _setTeam,
+          currentUsername: _currentUsername,
+          onTeamChange: _setUserData,
+        ),
+        '/profile': (context) => ProfilePage(username: _currentUsername),
         '/settings': (context) => SettingsPage(
-              toggleTheme: _toggleTheme,
-            ),
+          toggleTheme: _toggleTheme,
+        ),
+        '/admin': (context) => const AdminPage(),
+        '/admin/users': (context) => const UserManagementPage(),
+        '/admin/fieldowners': (context) => const FieldOwnerList(),
+        '/admin/blocklist': (context) => const BlocklistPage(),
+        '/admin/teams': (context) => const TeamsManagementPage(),
+        '/allTeams': (context) => const AllTeams(),
+        '/fieldownerlogin': (context) => FieldOwnerLogin(
+          toggleTheme: _toggleTheme,
+          setUserData: _setUserData,
+        ),
+        '/fieldownermain': (context) => const FieldOwnerMainPage(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/joinTeam') {
+          final teamName = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) {
+              return JoinTeam(
+                teamName: teamName,
+                currentUsername: _currentUsername!, 
+              );
+            },
+          );
+        }
+        return null;
       },
     );
   }

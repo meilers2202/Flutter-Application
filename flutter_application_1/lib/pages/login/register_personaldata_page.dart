@@ -31,7 +31,8 @@ class PersonalDataPageState extends State<PersonalDataPage> {
 
   Future<void> _fetchTeams() async {
     const String ipAddress = 'localhost';
-    final url = Uri.parse('http://$ipAddress/get_teams.php');
+    // Ändere die URL von 'get_teams.php' zu 'get_teams.php?detailed=false'
+    final url = Uri.parse('http://$ipAddress/get_teams.php?detailed=false');
 
     try {
       final response = await http.get(url);
@@ -62,10 +63,26 @@ class PersonalDataPageState extends State<PersonalDataPage> {
       return;
     }
 
-    final int selectedTeamId = int.parse(
-      _teams.firstWhere((team) => team['name'] == _selectedTeamName)['id'],
+    // Findet das Team-Objekt und gibt ein leeres Map zurück, wenn es nicht gefunden wird.
+    final teamData = _teams.firstWhere(
+      (team) => team['name'] == _selectedTeamName,
+      orElse: () => {},
     );
+
+    // Überprüfen, ob das 'id'-Feld vorhanden und nicht null ist.
+    final dynamic teamId = teamData['id'];
+    if (teamId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Fehler: Die ID des ausgewählten Teams konnte nicht abgerufen werden.')),
+      );
+      return;
+    }
     
+    // Konvertiere teamId sicher in eine Zeichenkette und dann in eine Ganzzahl.
+    final int selectedTeamId = int.parse(teamId.toString());
+
     const String ipAddress = 'localhost';
     final url = Uri.parse('http://$ipAddress/register.php');
 
@@ -152,7 +169,6 @@ class PersonalDataPageState extends State<PersonalDataPage> {
                         filled: true,
                         fillColor: Colors.white,
                       ),
-                      // Korrigierter Parameter
                       initialValue: _selectedTeamName,
                       items: _teams.map<DropdownMenuItem<String>>((team) {
                         return DropdownMenuItem<String>(

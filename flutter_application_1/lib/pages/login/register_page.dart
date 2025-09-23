@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_application_1/pages/personaldata_page.dart';
+import 'package:flutter_application_1/pages/login/register_personaldata_page.dart';
 
 class RegisterPage extends StatefulWidget {
   final VoidCallback toggleTheme;

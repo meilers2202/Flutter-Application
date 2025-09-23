@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+// SettingsPage ist jetzt ein StatelessWidget, da die Zustandsverwaltung von MyApp übernommen wird
 class SettingsPage extends StatelessWidget {
   final VoidCallback toggleTheme;
+
   const SettingsPage({
     super.key,
     required this.toggleTheme,
@@ -32,23 +34,32 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
-            title: Text('Dunkler Modus',
-                style: Theme.of(context).textTheme.bodyMedium),
-            leading: Icon(Icons.dark_mode,
-                color: Theme.of(context).textTheme.bodyMedium?.color),
+            title: Text(
+              'Dunkler Modus',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            leading: Icon(
+              Icons.dark_mode,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
             trailing: Switch(
               value: Theme.of(context).brightness == Brightness.dark,
               onChanged: (bool value) {
+                // Diese Funktion ändert den Anzeigemodus
                 toggleTheme();
               },
             ),
           ),
           const Divider(),
           ListTile(
-            title: Text('Benachrichtigungen',
-                style: Theme.of(context).textTheme.bodyMedium),
-            leading: Icon(Icons.notifications,
-                color: Theme.of(context).textTheme.bodyMedium?.color),
+            title: Text(
+              'Benachrichtigungen',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            leading: Icon(
+              Icons.notifications,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
