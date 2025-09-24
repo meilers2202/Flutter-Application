@@ -14,6 +14,7 @@ import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages
 import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/teams_management_page.dart';
 import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_login.dart';
 import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_pages/field_owner_main.dart';
+import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_pages/create_field.dart';
 
 void main() => runApp(const MyApp());
 
@@ -24,9 +25,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
   String? _currentUsername;
   String? _setTeam;
-  ThemeMode _themeMode = ThemeMode.light;
   String? _setRole;
 
   void _toggleTheme() {
@@ -122,6 +123,7 @@ class _MyAppState extends State<MyApp> {
           setUserData: _setUserData,
         ),
         '/fieldownermain': (context) => const FieldOwnerMainPage(),
+        '/fieldcreate': (context) => CreateField(currentUsername: _currentUsername!)
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/joinTeam') {

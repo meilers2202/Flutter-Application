@@ -40,12 +40,27 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/fieldcreate');
+              },
+              child: const Text(
+                "Feld hinzufügen",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                )
+              ),
+            ),
+          ],
         ),
-      ),
+      )
     );
   }
 }
