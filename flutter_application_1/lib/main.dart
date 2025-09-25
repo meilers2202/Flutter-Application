@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/login/login_page.dart'; // Hinzugefügt
-import 'package:flutter_application_1/pages/login/register_page.dart';
-import 'package:flutter_application_1/pages/login/register_personaldata_page.dart';
-import 'package:flutter_application_1/pages/user_pages/main_page/main_page.dart';
-import 'package:flutter_application_1/pages/user_pages/main_page/all_teams_page/all_teams_page.dart';
-import 'package:flutter_application_1/pages/user_pages/main_page/all_teams_page/join_team_page/join_team_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/profile_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/settings_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/admin_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/user_management_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/block_list_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/field_owner_list.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/admin_pages/teams_management_page.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_login.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_pages/field_owner_main.dart';
-import 'package:flutter_application_1/pages/user_pages/settings_page/field_owner_pages/create_field.dart';
+import 'package:pewpew_connect/pages/login/login_page.dart'; // Hinzugefügt
+import 'package:pewpew_connect/pages/login/register_page.dart';
+import 'package:pewpew_connect/pages/login/register_personaldata_page.dart';
+import 'package:pewpew_connect/pages/user_pages/main_page/main_page.dart';
+import 'package:pewpew_connect/pages/user_pages/main_page/all_teams_page/all_teams_page.dart';
+import 'package:pewpew_connect/pages/user_pages/main_page/all_teams_page/join_team_page/join_team_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/profile_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/settings_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/admin_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/user_management_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/block_list_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_owner_list.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/teams_management_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_login.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/field_owner_main.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/create_field.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/field_details_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/edit_field_page.dart';
+import 'package:pewpew_connect/pages/policy/register_policy.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_page.dart';
 
 void main() => runApp(const MyApp());
 
@@ -117,13 +121,27 @@ class _MyAppState extends State<MyApp> {
         '/admin/fieldowners': (context) => const FieldOwnerList(),
         '/admin/blocklist': (context) => const BlocklistPage(),
         '/admin/teams': (context) => const TeamsManagementPage(),
+        '/admin/fields': (context) => const FieldList(),
         '/allTeams': (context) => const AllTeams(),
         '/fieldownerlogin': (context) => FieldOwnerLogin(
           toggleTheme: _toggleTheme,
           setUserData: _setUserData,
         ),
-        '/fieldownermain': (context) => const FieldOwnerMainPage(),
-        '/fieldcreate': (context) => CreateField(currentUsername: _currentUsername!)
+        '/fieldownermain': (context) => FieldOwnerMainPage(
+          currentUsername: _currentUsername ?? '', // Stellen Sie sicher, dass ein String übergeben wird
+        ),
+        '/fieldcreate': (context) => CreateField(currentUsername: _currentUsername!),
+        '/fielddetails': (context) {
+          // Hier rufen wir das übergebene Field-Objekt ab
+          final field = ModalRoute.of(context)!.settings.arguments as Field;
+          // Geben Sie die neue Detailseite zurück und übergeben Sie das Field-Objekt
+          return FieldDetailsPage(field: field);
+        },
+        '/editfield': (context) { // NEUE ROUTE HINZUGEFÜGT
+          final fieldToEdit = ModalRoute.of(context)!.settings.arguments as Field;
+          return EditFieldPage(field: fieldToEdit);
+        },
+        '/registerpolicy': (context) => const RegisterPolicy(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/joinTeam') {

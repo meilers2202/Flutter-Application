@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 // Importiere die RegisterPage, da WelcomePage darauf navigiert
-import 'package:flutter_application_1/pages/login/register_page.dart';
+import 'package:pewpew_connect/pages/login/register_page.dart';
 // Du musst den Pfad zu deiner App anpassen, falls er anders ist!
 
 class FieldOwnerLogin extends StatefulWidget {

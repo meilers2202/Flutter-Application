@@ -49,11 +49,13 @@ class PersonalDataPageState extends State<PersonalDataPage> {
       debugPrint("Verbindungsfehler beim Laden der Teams: $e");
     }
   }
-
-  Future<void> _register() async {
+  
+  // NEU: Funktion, die zur Policy navigiert und dann registriert
+  void _checkPolicyAndRegister() async {
     final String email = _emailController.text;
     final String city = _cityController.text;
 
+    // 1. Grundlegende Validierung
     if (email.isEmpty || city.isEmpty || _selectedTeamName == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,6 +64,29 @@ class PersonalDataPageState extends State<PersonalDataPage> {
       );
       return;
     }
+    
+    // 2. Zur Policy-Seite navigieren und auf das Ergebnis warten
+    // Das Ergebnis ist entweder true (Akzeptiert) oder false (Abgelehnt)
+    final bool? policyAccepted = await Navigator.of(context).pushNamed(
+        '/registerpolicy') as bool?;
+
+    // 3. Registrierung nur durchführen, wenn die Policy akzeptiert wurde
+    if (policyAccepted == true) {
+      await _register();
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Registrierung abgebrochen: Die Bedingungen wurden nicht akzeptiert.')),
+      );
+    }
+  }
+
+
+  // Die eigentliche Registrierungslogik (Wurde von _register in _doRegistration umbenannt, um Verwirrung zu vermeiden, wird aber von _checkPolicyAndRegister aufgerufen)
+  Future<void> _register() async {
+    final String email = _emailController.text;
+    final String city = _cityController.text;
 
     // Findet das Team-Objekt und gibt ein leeres Map zurück, wenn es nicht gefunden wird.
     final teamData = _teams.firstWhere(
@@ -105,8 +130,12 @@ class PersonalDataPageState extends State<PersonalDataPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'])),
         );
+        
+        // WICHTIG: NACH ERFOLGREICHER REGISTRIERUNG ZUM LOGIN-SCREEN NAVIGIEREN
+        // Alle vorherigen Routen werden entfernt.
         Navigator.of(context).pushNamedAndRemoveUntil(
             '/login', (Route<dynamic> route) => false);
+            
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -190,7 +219,7 @@ class PersonalDataPageState extends State<PersonalDataPage> {
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: _register,
+                      onPressed: _checkPolicyAndRegister, // **WICHTIG: Funktion geändert**
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             const Color.fromARGB(255, 90, 111, 78),
@@ -207,7 +236,9 @@ class PersonalDataPageState extends State<PersonalDataPage> {
                       padding: const EdgeInsets.all(20.0),
                       child: InkWell(
                         onTap: () {
-                          Navigator.of(context).pop();
+                          // KORREKTUR: Einfach die aktuelle Seite aus dem Stack entfernen.
+                          // Dies navigiert zur Seite, die VOR der PersonalDataPage lag (z.B. RegisterPage).
+                          Navigator.of(context).pop(); 
                         },
                         child: Text(
                           "Zurück",

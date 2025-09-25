@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_application_1/pages/login/register_personaldata_page.dart';
+import 'package:pewpew_connect/pages/login/register_personaldata_page.dart';
 
 class RegisterPage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -38,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     // Navigiere zum zweiten Screen und übergebe die Daten
-    Navigator.of(context).pushReplacement(
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => PersonalDataPage(
           username: _usernameController.text,

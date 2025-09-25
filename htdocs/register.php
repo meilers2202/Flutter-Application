@@ -9,7 +9,8 @@ if ($conn->connect_error) {
     exit();
 }
 
-if (isset($_POST['username']) && isset($_POST['password']) && isset($_POST['email']) && isset($_POST['city']) && isset($_POST['group_id'])) {
+// Prüft, ob alle notwendigen Registrierungsdaten vom Client gesendet wurden.
+if (isset($_POST['username']) && isset($_POST['password']) && isset($_POST['email']) && isset($_POST['city']) && isset($_POST['group_id'])) { 
     $inputUsername = $_POST['username'];
     $inputPassword = $_POST['password'];
     $inputEmail = $_POST['email'];
@@ -28,20 +29,35 @@ if (isset($_POST['username']) && isset($_POST['password']) && isset($_POST['emai
         $hashedPassword = password_hash($inputPassword, PASSWORD_DEFAULT);
         
         $defaultRole = 'user';
+        $policyAccepted = 1; // Die Policy gilt als akzeptiert, da die Registrierung nur so möglich ist.
+        
+        // Konvertierung der group_id in einen Integer, da sie in der Datenbank so gespeichert wird.
+        $inputGroupIdInt = intval($inputGroupId);
 
-        $stmt = $conn->prepare("INSERT INTO users (username, password, email, city, group_id, role) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $inputUsername, $hashedPassword, $inputEmail, $inputCity, $inputGroupId, $defaultRole);
+        // INSERT Statement mit der neuen Spalte policy_accepted
+        $stmt = $conn->prepare("INSERT INTO users (username, password, email, city, group_id, role, policy_accepted) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        
+        // Parameter-Bindung: 7 Parameter
+        // s (username), s (password), s (email), s (city), i (group_id), s (defaultRole), i (policyAccepted)
+        if (!$stmt->bind_param("ssssisi", $inputUsername, $hashedPassword, $inputEmail, $inputCity, $inputGroupIdInt, $defaultRole, $policyAccepted)) {
+            // Fehlerausgabe, falls die Parameterbindung fehlschlägt
+            echo json_encode(["success" => false, "message" => "Bindungsfehler: " . $stmt->error]);
+            $stmt->close();
+            $conn->close();
+            exit();
+        }
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Registrierung erfolgreich!"]);
         } else {
-            echo json_encode(["success" => false, "message" => "Fehler bei der Registrierung."]);
+            // Hilfsausgabe: Zeigt den genauen SQL-Fehler an, falls die Ausführung fehlschlägt
+            echo json_encode(["success" => false, "message" => "Fehler bei der Registrierung. SQL-Fehler: " . $stmt->error]);
         }
     }
 
     $stmt->close();
 } else {
-    echo json_encode(["success" => false, "message" => "Unvollständige Daten."]);
+    echo json_encode(["success" => false, "message" => "Unvollständige Daten. Erwarte: username, password, email, city, group_id."]);
 }
 
 $conn->close();

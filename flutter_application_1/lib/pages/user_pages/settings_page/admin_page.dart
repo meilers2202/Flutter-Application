@@ -55,6 +55,19 @@ class AdminPage extends StatelessWidget {
           ),
           ListTile(
             title: Text(
+              'Field List',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            leading: Icon(
+              Icons.area_chart_outlined,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
+            onTap: () {
+              Navigator.of(context).pushNamed('/admin/fields');
+            },
+          ),
+          ListTile(
+            title: Text(
               'Blocklist',
               style: Theme.of(context).textTheme.bodyMedium,
             ),

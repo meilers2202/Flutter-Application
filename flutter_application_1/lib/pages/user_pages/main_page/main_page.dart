@@ -1,6 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/service/user_service.dart';
-import 'package:flutter_application_1/pages/user_pages/main_page/team_details_page.dart';
+import 'package:pewpew_connect/service/user_service.dart';
+import 'package:pewpew_connect/pages/user_pages/main_page/team_details_page.dart';
 import 'package:package_info_plus/package_info_plus.dart'; 
 
 class MainPage extends StatefulWidget {

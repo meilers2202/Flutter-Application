@@ -176,7 +176,7 @@ class _CreateFieldState extends State<CreateField> {
               ),
             ),
             const SizedBox(height: 5),
-            _buildTextField(_companyController, 'Firma'),
+            _buildTextField(_companyController, 'Betreiber'),
             const SizedBox(height: 15),
             _buildTextField(_fieldnameController, 'Feldname'),
             const SizedBox(height: 15),

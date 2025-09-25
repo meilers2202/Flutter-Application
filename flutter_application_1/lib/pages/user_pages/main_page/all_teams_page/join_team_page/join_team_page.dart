@@ -84,6 +84,7 @@ class _JoinTeamState extends State<JoinTeam> {
             ElevatedButton(
               onPressed: () async {
                 await _joinTeam();
+                // ignore: use_build_context_synchronously
                 Navigator.of(context).pushNamed('/main');
               },
 
