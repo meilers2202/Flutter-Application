@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 25. Sep 2025 um 15:02
+-- Erstellungszeit: 26. Sep 2025 um 12:01
 -- Server-Version: 10.4.32-MariaDB
 -- PHP-Version: 8.2.12
 
@@ -59,6 +59,7 @@ CREATE TABLE `fieldowner` (
 --
 
 INSERT INTO `fieldowner` (`user_id`, `name`) VALUES
+(10, 'ge'),
 (1, 'Marvin Eilers');
 
 -- --------------------------------------------------------
@@ -81,16 +82,6 @@ CREATE TABLE `fields` (
   `checkstate` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Daten für Tabelle `fields`
---
-
-INSERT INTO `fields` (`id`, `fieldname`, `description`, `rules`, `street`, `housenumber`, `postalcode`, `city`, `company`, `field_owner_id`, `checkstate`) VALUES
-(5, 'Feldname', 'Beschreibung', 'Regeln', 'Straße', 'Hausnummer', 'PLZ', 'Stadt', 'Firma', 1, 1),
-(6, 'Airsoft GMBBH', 'Ein ausgeglichener Airsoftplatz zum spielen', '1. Keine Toten', 'Tannenstraße', '15', '09112', 'Chemnitz', 'SFZ Förderzentrum gGmbH', 1, 3),
-(11, 'Testfeld Name', 'Ein großes, abwechslungsreiches Testgelände für Airsoft.', '1. 1,5 Joule Limit. 2. Keine Blind-Shots. 3. Schutzbrille Pflicht.', 'Tannenstraße', '15', '09112', 'Chemnitz', 'SFZ Förderzentrum gGmbH', 1, 1),
-(12, 'testfeld', 'groß', 'kein draufgehen', 'Tannenstraße', '15', '09112', 'Chemnitz', 'SFZ', 1, 0);
-
 -- --------------------------------------------------------
 
 --
@@ -108,7 +99,8 @@ CREATE TABLE `groups` (
 
 INSERT INTO `groups` (`id`, `name`) VALUES
 (1, 'Racoons'),
-(2, 'fe');
+(2, 'fe'),
+(3, 'ew');
 
 -- --------------------------------------------------------
 
@@ -211,19 +203,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT für Tabelle `fieldowner`
 --
 ALTER TABLE `fieldowner`
-  MODIFY `user_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `user_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT für Tabelle `fields`
 --
 ALTER TABLE `fields`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT für Tabelle `groups`
 --
 ALTER TABLE `groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT für Tabelle `roles`
@@ -235,7 +227,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT für Tabelle `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Constraints der exportierten Tabellen
