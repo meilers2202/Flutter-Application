@@ -1,8 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:pewpew_connect/service/constants.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? username;
@@ -28,7 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchProfileData() async {
-    final url = Uri.parse('http://localhost/get_profile.php');
+    final url = Uri.parse('$ipAddress/get_profile.php');
     try {
       final response = await http.post(
         url,

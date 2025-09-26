@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 // WICHTIG: Ersetze 'field_review_page.dart' durch den korrekten Pfad zur neuen Datei
 import 'field_review_page.dart'; 
-
-const String ipAddress = 'localhost'; // Oder die IP-Adresse deines Servers
+import 'package:pewpew_connect/service/constants.dart';
 
 // NEU: Datenmodell für ein Feld basierend auf der 'fields'-Tabelle
 class Fields {
@@ -71,7 +70,7 @@ class _FieldListState extends State<FieldList> {
 
   // Ruft alle Felder vom Backend ab (Bleibt unverändert)
   Future<void> _fetchAllFields() async {
-    final url = Uri.parse('http://$ipAddress/get_fields.php');
+    final url = Uri.parse('$ipAddress/get_fields.php');
     try {
       final response = await http.post(url); 
       

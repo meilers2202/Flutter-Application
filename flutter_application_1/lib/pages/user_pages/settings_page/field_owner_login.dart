@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-// Importiere die RegisterPage, da WelcomePage darauf navigiert
-import 'package:pewpew_connect/pages/login/register_page.dart';
-// Du musst den Pfad zu deiner App anpassen, falls er anders ist!
+import 'package:pewpew_connect/service/constants.dart';
 
 class FieldOwnerLogin extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -37,9 +34,8 @@ class _FieldOwnerLoginState extends State<FieldOwnerLogin> {
     final String username = _usernameController.text;
     final String password = _passwordController.text;
 
-    const String ipAddress = 'localhost';
     // Ändere den Endpunkt auf die neue PHP-Datei
-    final url = Uri.parse('http://$ipAddress/field_owner_login.php');
+    final url = Uri.parse('$ipAddress/field_owner_login.php');
 
     try {
       final response = await http.post(
@@ -156,10 +152,8 @@ class _FieldOwnerLoginState extends State<FieldOwnerLogin> {
                 padding: const EdgeInsets.all(20.0),
                 child: InkWell(
                   onTap: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => RegisterPage(toggleTheme: widget.toggleTheme),
-                      ),
+                    Navigator.of(context).pushNamed(
+                      '/fieldownerregister',
                     );
                   },
                   child: Text(

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-const String ipAddress = 'localhost';
-
 class RegisterPolicy extends StatefulWidget {
   const RegisterPolicy({super.key});
 

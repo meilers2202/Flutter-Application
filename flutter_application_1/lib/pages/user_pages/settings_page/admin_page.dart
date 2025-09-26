@@ -30,7 +30,14 @@ class AdminPage extends StatelessWidget {
           ListTile(
             title: Text(
               'Benutzer verwalten',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: TextStyle(
+                color: Color.fromARGB(255, 0, 0, 0),
+                fontSize:15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              'Alle Benutzer einsehen'
             ),
             leading: Icon(
               Icons.group,
@@ -40,10 +47,18 @@ class AdminPage extends StatelessWidget {
               Navigator.of(context).pushNamed('/admin/users');
             },
           ),
+          const Divider(),
           ListTile(
             title: Text(
               'Field-Owner List',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: TextStyle(
+                color: Color.fromARGB(255, 0, 0, 0),
+                fontSize:15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              'Alle Field-Owner einsehen'
             ),
             leading: Icon(
               Icons.area_chart_outlined,
@@ -53,10 +68,18 @@ class AdminPage extends StatelessWidget {
               Navigator.of(context).pushNamed('/admin/fieldowners');
             },
           ),
+          const Divider(),
           ListTile(
             title: Text(
               'Field List',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: TextStyle(
+                color: Color.fromARGB(255, 0, 0, 0),
+                fontSize:15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              'Felder prüfen & verwalten'
             ),
             leading: Icon(
               Icons.area_chart_outlined,
@@ -66,10 +89,18 @@ class AdminPage extends StatelessWidget {
               Navigator.of(context).pushNamed('/admin/fields');
             },
           ),
+          const Divider(),
           ListTile(
             title: Text(
               'Blocklist',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: TextStyle(
+                color: Color.fromARGB(255, 0, 0, 0),
+                fontSize:15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              'Liste geblockter User'
             ),
             leading: Icon(
               Icons.person_off,
@@ -79,10 +110,18 @@ class AdminPage extends StatelessWidget {
               Navigator.of(context).pushNamed('/admin/blocklist');
             },
           ),
+          const Divider(),
           ListTile(
             title: Text(
               'Teams',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: TextStyle(
+                color: Color.fromARGB(255, 0, 0, 0),
+                fontSize:15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              'Teams prüfen & verwalten'
             ),
             leading: Icon(
               Icons.groups,

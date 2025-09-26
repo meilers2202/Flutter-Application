@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-
-const String ipAddress = 'localhost';
-
 class BlocklistPage extends StatefulWidget {
   const BlocklistPage({super.key});
 

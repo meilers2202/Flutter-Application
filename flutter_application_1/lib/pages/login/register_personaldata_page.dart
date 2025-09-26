@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pewpew_connect/service/constants.dart';
 
 class PersonalDataPage extends StatefulWidget {
   final String username;
@@ -30,9 +31,7 @@ class PersonalDataPageState extends State<PersonalDataPage> {
   }
 
   Future<void> _fetchTeams() async {
-    const String ipAddress = 'localhost';
-    // Ändere die URL von 'get_teams.php' zu 'get_teams.php?detailed=false'
-    final url = Uri.parse('http://$ipAddress/get_teams.php?detailed=false');
+    final url = Uri.parse('$ipAddress/get_teams.php?detailed=false');
 
     try {
       final response = await http.get(url);
@@ -107,9 +106,7 @@ class PersonalDataPageState extends State<PersonalDataPage> {
     
     // Konvertiere teamId sicher in eine Zeichenkette und dann in eine Ganzzahl.
     final int selectedTeamId = int.parse(teamId.toString());
-
-    const String ipAddress = 'localhost';
-    final url = Uri.parse('http://$ipAddress/register.php');
+    final url = Uri.parse('$ipAddress/register.php');
 
     try {
       final response = await http.post(
@@ -131,8 +128,6 @@ class PersonalDataPageState extends State<PersonalDataPage> {
           SnackBar(content: Text(data['message'])),
         );
         
-        // WICHTIG: NACH ERFOLGREICHER REGISTRIERUNG ZUM LOGIN-SCREEN NAVIGIEREN
-        // Alle vorherigen Routen werden entfernt.
         Navigator.of(context).pushNamedAndRemoveUntil(
             '/login', (Route<dynamic> route) => false);
             

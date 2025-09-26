@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-const String ipAddress = 'localhost';
+import 'package:pewpew_connect/service/constants.dart'; 
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamName;
@@ -41,7 +40,7 @@ class TeamDetailsPage extends StatefulWidget {
 class _TeamDetailsPageState extends State<TeamDetailsPage> {
 
   Future<void> _leaveTeam() async {
-    final url = Uri.parse('http://$ipAddress/leave_team.php');
+    final url = Uri.parse('$ipAddress/leave_team.php');
     try {
       final response = await http.post(
         url,
@@ -73,8 +72,38 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     }
   }
 
+  // NEU: Widget zur Bestätigung des Verlassens
+  void _confirmLeaveTeam() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Team verlassen?'),
+          content: Text('Sind Sie sicher, dass Sie das Team "${widget.teamName}" verlassen möchten?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Abbrechen'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _leaveTeam();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Verlassen', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Ermitteln des aktuellen Benutzers für die Anzeige
+    final currentUser = widget.currentUsername;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -95,36 +124,87 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
           ),
         ),
       ),
-      body: widget.members.isNotEmpty
-          ? ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _leaveTeam();
-                  },
-                  child: const Text("Team verlassen"),
+      body: SingleChildScrollView( 
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Team verlassen Button (mit Bestätigungsdialog)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _confirmLeaveTeam, 
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: const Text('Team verlassen', style: TextStyle(fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white, 
+                  backgroundColor: Colors.red.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                const Text(
-                  "Mitglieder:",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                const SizedBox(height: 2),
-                ...widget.members.map((member) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: Text(
-                        "- $member",
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    )),
-              ],
-            )
-          : const Center(
-              child: Text(
-                "Dieses Team hat keine weiteren Mitglieder.",
-                style: TextStyle(fontSize: 16),
               ),
             ),
+            
+            const SizedBox(height: 30),
+
+            // 2. Mitglieder-Sektion
+            const Text(
+              "👥 Mitglieder des Teams:",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87),
+            ),
+            const Divider(height: 15, thickness: 1.5),
+            
+            // Anzeige bei keinen weiteren Mitgliedern
+            if (widget.members.length <= 1 && widget.members.contains(currentUser)) 
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text(
+                    "Sie sind das einzige Mitglied dieses Teams.",
+                    style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              // Liste der Mitglieder (mit Cards und Icons)
+              ...widget.members.map((member) { // .toList() wurde hier entfernt
+                final isCurrentUser = member == currentUser;
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  elevation: isCurrentUser ? 4 : 2, 
+                  color: isCurrentUser ? Colors.lightBlue.shade50 : Colors.white,
+                  child: ListTile(
+                    leading: Icon(
+                      isCurrentUser ? Icons.person_pin : Icons.person_outline,
+                      color: isCurrentUser ? Colors.blue : Colors.black54,
+                    ),
+                    title: Text(
+                      member,
+                      style: TextStyle(
+                        fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 17,
+                        color: isCurrentUser ? Colors.blue.shade900 : Colors.black87,
+                      ),
+                    ),
+                    trailing: isCurrentUser
+                        ? Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: const Text(
+                              'Sie',
+                              style: TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                          )
+                        : null,
+                  ),
+                );
+              })
+          ],
+        ),
+      ),
     );
   }
 }

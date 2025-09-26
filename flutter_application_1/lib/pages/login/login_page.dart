@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-// Importiere die RegisterPage, da WelcomePage darauf navigiert
+import 'package:pewpew_connect/service/constants.dart';
 import 'package:pewpew_connect/pages/login/register_page.dart';
-// Du musst den Pfad zu deiner App anpassen, falls er anders ist!
 
 class WelcomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -37,9 +35,7 @@ class _WelcomePageState extends State<WelcomePage> {
     final String username = _usernameController.text;
     final String password = _passwordController.text;
 
-    const String ipAddress = 'localhost';
-    final url = Uri.parse('http://$ipAddress/login.php');
-
+    final url = Uri.parse('$ipAddress/login.php');
     try {
       final response = await http.post(
         url,

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-const String ipAddress = 'localhost'; // Oder die IP-Adresse deines Servers
+import 'package:pewpew_connect/service/constants.dart';
 
 class FieldOwnerList extends StatefulWidget {
   const FieldOwnerList({super.key});
@@ -22,7 +21,7 @@ class _FieldOwnerListState extends State<FieldOwnerList> {
   }
 
   Future<void> _fetchAllUsers() async {
-    final url = Uri.parse('http://$ipAddress/get_field_owners_data.php');
+    final url = Uri.parse('$ipAddress/get_field_owners_data.php');
     try {
       final response = await http.post(url);
       final Map<String, dynamic> data = json.decode(response.body);

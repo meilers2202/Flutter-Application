@@ -5,6 +5,7 @@ import 'package:pewpew_connect/pages/login/register_personaldata_page.dart';
 import 'package:pewpew_connect/pages/user_pages/main_page/main_page.dart';
 import 'package:pewpew_connect/pages/user_pages/main_page/all_teams_page/all_teams_page.dart';
 import 'package:pewpew_connect/pages/user_pages/main_page/all_teams_page/join_team_page/join_team_page.dart';
+import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_register.dart';
 import 'package:pewpew_connect/pages/user_pages/settings_page/profile_page.dart';
 import 'package:pewpew_connect/pages/user_pages/settings_page/settings_page.dart';
 import 'package:pewpew_connect/pages/user_pages/settings_page/admin_page.dart';
@@ -126,6 +127,9 @@ class _MyAppState extends State<MyApp> {
         '/fieldownerlogin': (context) => FieldOwnerLogin(
           toggleTheme: _toggleTheme,
           setUserData: _setUserData,
+        ),
+        '/fieldownerregister': (context) => RegisterFieldOwnerPage(
+          toggleTheme: _toggleTheme,
         ),
         '/fieldownermain': (context) => FieldOwnerMainPage(
           currentUsername: _currentUsername ?? '', // Stellen Sie sicher, dass ein String übergeben wird

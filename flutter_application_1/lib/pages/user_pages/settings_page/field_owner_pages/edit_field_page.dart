@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// Importieren Sie die Field-Klasse aus dem Pfad, wo sie definiert ist
 import 'field_owner_main.dart'; // Pfad ggf. anpassen
-
-const String ipAddress = 'localhost';
+import 'package:pewpew_connect/service/constants.dart';
 
 class EditFieldPage extends StatefulWidget {
   final Field field;
@@ -60,7 +58,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
       return;
     }
 
-    final url = Uri.parse('http://$ipAddress/update_field.php');
+    final url = Uri.parse('$ipAddress/update_field.php');
 
     try {
       final response = await http.post(
@@ -85,7 +83,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
           SnackBar(content: Text('Feld erfolgreich aktualisiert: ${data['message']}')),
         );
         // Nach erfolgreicher Aktualisierung zur vorherigen Seite zurückkehren
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop(true); 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Fehler beim Aktualisieren: ${data['message']}')),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-const String ipAddress = 'localhost';
+import 'package:pewpew_connect/service/constants.dart';
 
 // Ein Modell für die Felddaten zur besseren Strukturierung
 class Field {
@@ -68,7 +67,6 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // HIER IST DIE FUNKTION KORREKT PLATZIERT
   Color _getColorForStatus(String colorHint) {
     switch (colorHint.toLowerCase()) {
       case 'grau':
@@ -87,10 +85,12 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
   @override
   void initState() {
     super.initState();
+    // ⚠️ KORREKTUR des URI-Fehlers in der Ladefunktion:
+    // Die Hilfsfunktionen werden unten korrigiert.
     _fetchAndLoadFields();
   }
 
-  // --- Schritt 1 & 2: ID abrufen und Felder laden ---
+  // --- Schritt 1 & 2: ID abrufen und Felder laden (Wird auch zur Aktualisierung verwendet) ---
   Future<void> _fetchAndLoadFields() async {
     setState(() {
       _isLoading = true;
@@ -125,7 +125,8 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
 
   // Hilfsmethode, um die Benutzer-ID vom Server abzurufen
   Future<int?> _fetchUserId(String username) async {
-    final url = Uri.parse('http://$ipAddress/get_user_id_by_username.php');
+    // ⚠️ KORREKTUR des URI-Fehlers: 'http://' Protokoll hinzugefügt
+    final url = Uri.parse('$ipAddress/get_user_id_by_username.php');
     final response = await http.post(
       url,
       body: {'username': username},
@@ -144,7 +145,7 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
 
   // Hilfsmethode, um die Felder anhand der Field Owner ID abzurufen
   Future<void> _fetchFields(int fieldOwnerId) async {
-    final url = Uri.parse('http://$ipAddress/fetch_fields_by_owner_id.php');
+    final url = Uri.parse('$ipAddress/fetch_fields_by_owner_id.php');
     final response = await http.post(
       url,
       body: {'field_owner_id': fieldOwnerId.toString()},
@@ -200,7 +201,12 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
             onPressed: () {
               Navigator.of(context)
                   .pushNamed('/fieldcreate')
-                  .then((_) => _fetchAndLoadFields()); // Felder neu laden, wenn wir zurückkommen
+                  // DIESE FUNKTION IST BEREITS KORREKT für das Erstellen
+                  .then((result) {
+                        // Der CreateField-Screen sollte bei Erfolg 'true' zurückgeben, 
+                        // aber die aktuelle Logik lädt einfach neu, was auch OK ist.
+                        _fetchAndLoadFields();
+                    });
             },
             child: const Text(
               "Feld hinzufügen",
@@ -258,18 +264,26 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
                   '${field.company}\n${field.street} ${field.housenumber}\n${field.postalcode}, ${field.city}\nStatus: ${field.checkstatename}'
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios),
+                
+                // 🚨 KORRIGIERTE NAVIGATIONS-LOGIK FÜR DIE AKTUALISIERUNG
                 onTap: () {
-                  Navigator.of(context).pushNamed(
-                    '/fielddetails',
-                    arguments: field,
-                  );
+                  Navigator.of(context)
+                    .pushNamed(
+                      '/fielddetails',
+                      arguments: field,
+                    )
+                    .then((result) {
+                      // Prüfen, ob die Detailseite das Signal 'true' zurückgegeben hat (nach Löschen/Bearbeiten)
+                      if (result == true) {
+                        // Wenn ja, laden wir die Feldliste neu.
+                        _fetchAndLoadFields();
+                      }
+                    });
                 },
               ),
               
               // 2. Der farbige Balken (Positioned am rechten Rand der Card)
               Positioned(
-                // Top und Bottom werden nicht mehr auf 5 gesetzt, da der Stack
-                // die gesamte Höhe des ListTile übernimmt. Wir nutzen nur die right-Position.
                 top: 0, 
                 bottom: 0, 
                 right: 0.5, // An den rechten Rand der Card legen

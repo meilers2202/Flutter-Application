@@ -1,50 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:pewpew_connect/pages/login/register_personaldata_page.dart';
+import 'package:http/http.dart' as http; // Hinzugefügt
+import 'dart:convert'; // Hinzugefügt
+import 'package:pewpew_connect/service/constants.dart'; // Hinzugefügt (für ipAddress)
 
-class RegisterPage extends StatefulWidget {
+
+class RegisterFieldOwnerPage extends StatefulWidget {
   final VoidCallback toggleTheme;
 
-  const RegisterPage({
+  const RegisterFieldOwnerPage({
     super.key,
     required this.toggleTheme,
   });
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<RegisterFieldOwnerPage> createState() => _RegisterFieldOwnerPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterFieldOwnerPageState extends State<RegisterFieldOwnerPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  void _navigateToPersonalData() {
-    // Grundlegende Validierung für den ersten Screen
-    if (_usernameController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty) {
+  // 🔥 NEUE/ANGEPASSTE Methode: Löst die Registrierung direkt aus
+  Future<void> _registerFieldOwner() async { // async hinzugefügt
+    final String username = _usernameController.text.trim();
+    final String password = _passwordController.text;
+
+    // 1. Grundlegende Validierung
+    if (username.isEmpty || password.isEmpty || _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bitte fülle alle Felder aus.')),
       );
       return;
     }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
+    if (password != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwörter stimmen nicht überein.')),
       );
       return;
     }
 
-    // Navigiere zum zweiten Screen und übergebe die Daten
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PersonalDataPage(
-          username: _usernameController.text,
-          password: _passwordController.text,
-        ),
-      ),
-    );
+    // 2. HTTP-Anfrage zur Registrierung senden
+    final url = Uri.parse('$ipAddress/field_owner_register.php'); // URL angepasst
+
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          'username': username,
+          'password': password,
+        },
+      );
+
+      if (!mounted) return;
+
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
+        
+        // Bei Erfolg zum Login navigieren
+        Navigator.of(context).pushReplacementNamed('/fieldownerlogin'); 
+        
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registrierung fehlgeschlagen: ${data['message']}')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler: $e')),
+      );
+    }
   }
 
   @override
@@ -73,36 +104,37 @@ class _RegisterPageState extends State<RegisterPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Bitte registriere dich',
+                      'Feld-Besitzer Registrierung',
                       style: Theme.of(context)
                           .textTheme
                           .headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 25),
                     Text(
-                      '1. Benutzerdaten',
+                      'Benutzerdaten', 
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 15),
                     _buildTextField(_usernameController, 'Benutzername', false),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 10),
                     _buildTextField(_passwordController, 'Passwort', true),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 10),
                     _buildTextField(_confirmPasswordController,
                         'Passwort bestätigen', true),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
+                    
                     ElevatedButton(
-                      onPressed: _navigateToPersonalData,
+                      onPressed: _registerFieldOwner,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             const Color.fromARGB(255, 90, 111, 78),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
+                            horizontal: 40, vertical: 15),
                       ),
                       child: const Text(
-                        'Weiter',
-                        style: TextStyle(color: Colors.white),
+                        'Registrieren',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -110,7 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       padding: const EdgeInsets.all(20.0),
                       child: InkWell(
                         onTap: () {
-                          Navigator.of(context).pushReplacementNamed('/login');
+                          Navigator.of(context).pop(); // Zurück zum vorherigen Screen (vermutlich Login-Auswahl)
                         },
                         child: Text(
                           "Zum Login",
@@ -135,7 +167,7 @@ class _RegisterPageState extends State<RegisterPage> {
   static AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       title: const Text(
-        'Airsoft App',
+        'Feld-Besitzer',
         style: TextStyle(
           color: Colors.white,
           fontSize: 28,

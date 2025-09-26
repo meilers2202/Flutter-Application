@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'field_page.dart'; // Wichtig: Importiere das Fields-Model!
-
-// Kopiere die Konstante ipAddress hierher oder mach sie global
-const String ipAddress = 'localhost'; 
+import 'package:pewpew_connect/service/constants.dart';
 
 class FieldReviewPage extends StatefulWidget {
   final Fields field;
@@ -36,9 +34,46 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
     }
   }
 
+  // Funktion zum Löschen des Feldes
+  Future<void> _deleteField() async {
+    final url = Uri.parse('$ipAddress/delete_field.php');
+
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          'field_id': widget.field.id.toString(), // ID des Feldes verwenden
+        },
+      );
+
+      if (!mounted) return;
+
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (data['success'] == true) {
+        // Erfolgsmeldung anzeigen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
+        // Zurück zur vorherigen Seite navigieren (z.B. der Feldliste)
+        Navigator.of(context).pop(); 
+      } else {
+        // Fehlermeldung anzeigen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler beim Löschen: $e')),
+      );
+    }
+  }
+
   // Funktion, die den Status in der Datenbank ändert
   Future<void> _updateFieldStatus(int newStatus) async {
-    final url = Uri.parse('http://$ipAddress/update_field_status.php');
+    final url = Uri.parse('$ipAddress/update_field_status.php');
     
     try {
       final response = await http.post(
@@ -67,7 +102,7 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
               city: _currentField.city,
               company: _currentField.company,
               fieldOwnerId: _currentField.fieldOwnerId,
-              checkstate: newStatus, // NEUER STATUS
+              checkstate: newStatus,
             );
           });
           ScaffoldMessenger.of(context).showSnackBar(
@@ -90,6 +125,35 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
     }
   }
 
+  // Sicherheitsabfrage vor dem Löschen
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Feld löschen'),
+          content: Text('Sind Sie sicher, dass Sie das Feld "${widget.field.fieldname}" unwiderruflich löschen möchten?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Löschen', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.of(context).pop(); // Dialog schließen
+                _deleteField(); // Löschfunktion aufrufen
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String currentStatusText = _getCheckstateText(_currentField.checkstate);
@@ -97,8 +161,8 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Prüfung',
-          style: TextStyle(
+          'Prüfung', // Feldname im Titel hinzugefügt
+          style: const TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -161,35 +225,59 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
               ], isTextContent: true),
             
             const SizedBox(height: 30),
+            
+            // Status Aktionen
             const Text(
               'Status ändern:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
             ),
             const Divider(),
 
-            // Aktions-Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
                   onPressed: _currentField.checkstate != 1 ? () => _updateFieldStatus(1) : null, // Status 1: Genehmigt
                   icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Genehmigen'),
-                  style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom( // STYLE verschoben
                     foregroundColor: Colors.white, 
                     backgroundColor: Colors.green,
                   ),
+                  label: const Text('Genehmigen'), // LABEL ans Ende
+                ),
+                ElevatedButton.icon(
+                  onPressed: _currentField.checkstate != 2 ? () => _updateFieldStatus(2) : null, // Status 3: Abgelehnt
+                  icon: const Icon(Icons.info_outline),
+                  style: ElevatedButton.styleFrom( // STYLE verschoben
+                    foregroundColor: Colors.white, 
+                    backgroundColor: const Color.fromARGB(255, 249, 170, 0),
+                  ),
+                  label: const Text('Wird geklärt'), // LABEL ans Ende
                 ),
                 ElevatedButton.icon(
                   onPressed: _currentField.checkstate != 3 ? () => _updateFieldStatus(3) : null, // Status 3: Abgelehnt
                   icon: const Icon(Icons.cancel_outlined),
-                  label: const Text('Ablehnen'),
-                  style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom( // STYLE verschoben
                     foregroundColor: Colors.white, 
                     backgroundColor: Colors.red,
                   ),
+                  label: const Text('Ablehnen'), // LABEL ans Ende
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity, // Nun funktioniert die volle Breite
+              child: ElevatedButton.icon(
+                onPressed: _confirmDelete, // Ruft die Sicherheitsabfrage auf
+                icon: const Icon(Icons.delete_forever, color: Colors.white),
+                style: ElevatedButton.styleFrom( // STYLE VOR LABEL verschoben
+                  backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                label: const Text('Feld unwiderruflich LÖSCHEN'), // LABEL ans Ende
+              ),
             ),
           ],
         ),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-const String ipAddress = 'localhost'; // Oder die IP-Adresse deines Servers
+import 'package:pewpew_connect/service/constants.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({super.key});
@@ -12,9 +11,8 @@ class UserManagementPage extends StatefulWidget {
 }
 
 class _UserManagementPageState extends State<UserManagementPage> {
-  List<String> _users = [];
-  bool _isLoading = true;
-
+  
+  List<String> _users = []; 
   @override
   void initState() {
     super.initState();
@@ -22,7 +20,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
   }
 
   Future<void> _fetchAllUsers() async {
-    final url = Uri.parse('http://$ipAddress/get_all_users.php');
+    final url = Uri.parse('$ipAddress/get_all_users.php');
     try {
       final response = await http.post(url);
       final Map<String, dynamic> data = json.decode(response.body);
@@ -31,14 +29,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
         if (mounted) {
           setState(() {
             _users = List<String>.from(data['users']);
-            _isLoading = false;
           });
         }
       } else {
         if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(data['message'])),
           );
@@ -46,22 +40,27 @@ class _UserManagementPageState extends State<UserManagementPage> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Verbindungsfehler: $e')),
         );
       }
-    }
+    } 
   }
+  
+  // Platzhalter für die zukünftige Bearbeitungsfunktion
+  void _openUserEdit(String username) {
+    ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Öffne Bearbeitung für $username')),
+        );
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Benutzer',
+          'Benutzerverwaltung', 
           style: TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
             fontSize: 28,
@@ -78,33 +77,59 @@ class _UserManagementPageState extends State<UserManagementPage> {
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : _users.isEmpty
+      body: RefreshIndicator( 
+        onRefresh: _fetchAllUsers,
+        child: _users.isEmpty
               ? const Center(
-                  child: Text(
-                    'Keine Benutzer gefunden.',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.people_alt_outlined, size: 50, color: Colors.grey),
+                        SizedBox(height: 10),
+                        Text(
+                          'Keine Benutzer gefunden.',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                        Text(
+                          'Zum Aktualisieren herunterziehen.',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                 )
               : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                   itemCount: _users.length,
                   itemBuilder: (context, index) {
                     final user = _users[index];
-                    return ListTile(
-                      title: Text(
-                        user,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      leading: Icon(
-                        Icons.person,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
+                    return Card( 
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 6.0),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                          leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: const Icon(
+                                  Icons.person_outline,
+                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  size: 24,
+                                ),
+                            ),
+                          title: Text(
+                            user,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          trailing: IconButton( 
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _openUserEdit(user),
+                            ),
+                            onTap: () => _openUserEdit(user),
+                        ),
                     );
                   },
                 ),
+        ),
     );
   }
 }

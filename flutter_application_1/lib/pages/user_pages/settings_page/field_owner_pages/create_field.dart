@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-const String ipAddress = 'localhost';
+import 'package:pewpew_connect/service/constants.dart';
 
 class CreateField extends StatefulWidget {
   final String currentUsername;
@@ -36,7 +35,7 @@ class _CreateFieldState extends State<CreateField> {
   }
 
   Future<void> _fetchUserId() async {
-    final url = Uri.parse('http://$ipAddress/get_user_id_by_username.php');
+    final url = Uri.parse('$ipAddress/get_user_id_by_username.php');
     try {
       final response = await http.post(
         url,
@@ -91,8 +90,7 @@ class _CreateFieldState extends State<CreateField> {
       return;
     }
 
-    const String ipAddress = 'localhost';
-    final url = Uri.parse('http://$ipAddress/create_field.php');
+    final url = Uri.parse('$ipAddress/create_field.php');
 
     try {
       final response = await http.post(
