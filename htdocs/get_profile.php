@@ -1,43 +1,42 @@
 <?php
-require_once 'db_config.php';
-header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+require_once 'db_service.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
 $username_to_fetch = $_POST['username'] ?? null;
+
 if ($username_to_fetch === null) {
     echo json_encode(["success" => false, "message" => "Benutzername fehlt."]);
-    exit();
+    exit;
 }
 
-$stmt = $conn->prepare("SELECT users.username, users.email, users.city, users.created_at, users.role as userRole, groups.name AS team, roles.name AS teamrole FROM users LEFT JOIN groups ON users.group_id = groups.id LEFT JOIN roles ON users.teamrole = roles.id WHERE users.username = ?");
+$sql = "SELECT users.username, users.email, users.city, users.created_at, users.role as userRole, 
+               groups.name AS team, roles.name AS teamrole 
+        FROM users 
+        LEFT JOIN groups ON users.group_id = groups.id 
+        LEFT JOIN roles ON users.teamrole = roles.id 
+        WHERE users.username = :username";
 
-$stmt->bind_param("s", $username_to_fetch);
-$stmt->execute();
-$result = $stmt->get_result();
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['username' => $username_to_fetch]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $memberSince = date("d.m.Y", strtotime($row['created_at']));
-    
+if ($user) {
+    $memberSince = date("d.m.Y", strtotime($user['created_at']));
+
     echo json_encode([
         "success" => true,
         "user" => [
-            "username" => $row['username'],
-            "email" => $row['email'],
-            "city" => $row['city'],
-            "team" => $row['team'],
+            "username" => $user['username'],
+            "email" => $user['email'],
+            "city" => $user['city'],
+            "team" => $user['team'],
             "memberSince" => $memberSince,
-            "teamrole" => $row['teamrole'],
-            "role" => $row['userRole']
+            "teamrole" => $user['teamrole'],
+            "role" => $user['userRole']
         ]
     ]);
 } else {
     echo json_encode(["success" => false, "message" => "Benutzer nicht gefunden."]);
 }
-
-$stmt->close();
-$conn->close();
-?>

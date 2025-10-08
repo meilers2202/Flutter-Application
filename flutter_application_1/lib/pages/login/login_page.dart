@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:pewpew_connect/service/constants.dart';
 import 'package:pewpew_connect/pages/login/register_page.dart';
 
+IOClient getInsecureClient() {
+  if (kIsWeb) {
+    // Web unterstützt kein Umgehen von Zertifikaten, normaler Client
+    return IOClient(HttpClient());
+  } else {
+    final ioc = HttpClient()
+      ..badCertificateCallback = (cert, host, port) => true;
+    return IOClient(ioc);
+  }
+}
+
 class WelcomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
-  // Callback-Funktion, um Daten an die übergeordnete Klasse zu senden
   final Function({
     required String username,
     String? email,
@@ -35,10 +47,11 @@ class _WelcomePageState extends State<WelcomePage> {
     final String username = _usernameController.text;
     final String password = _passwordController.text;
 
-    final url = Uri.parse('$ipAddress/login.php');
     try {
-      final response = await http.post(
-        url,
+      final client = getInsecureClient();
+
+      final response = await client.post(
+        Uri.parse('$ipAddress/login.php'),
         body: {
           'username': username,
           'password': password,
@@ -101,6 +114,7 @@ class _WelcomePageState extends State<WelcomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Text("Web-App läuft!", style: const TextStyle(fontSize: 24)),
               Text(
                 'Bitte melde dich an',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -116,8 +130,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 90, 111, 78),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 ),
                 child: const Text(
                   'Anmelden',
@@ -130,13 +143,11 @@ class _WelcomePageState extends State<WelcomePage> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        // Hier navigierst du am Login vorbei
                         Navigator.of(context).pushNamed('/main');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                       ),
                       child: const Text(
                         'Entwicklermodus (Login überspringen)',
@@ -194,8 +205,7 @@ class _WelcomePageState extends State<WelcomePage> {
     );
   }
 
-  static Widget _buildTextField(
-      TextEditingController controller, String labelText, bool obscureText) {
+  static Widget _buildTextField(TextEditingController controller, String labelText, bool obscureText) {
     return TextField(
       controller: controller,
       obscureText: obscureText,

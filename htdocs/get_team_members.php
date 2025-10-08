@@ -1,66 +1,36 @@
 <?php
-require_once 'db_config.php';
-header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+require_once 'db_service.php';
 
-// Überprüfen, ob die Methode POST ist
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(["success" => false, "message" => "Ungültige Anfragemethode."]);
-    exit();
-}
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    echo json_encode(["success" => false, "message" => "Verbindungsfehler: " . $conn->connect_error]);
-    exit();
-}
-
-// Holen Sie den Teamnamen aus dem POST-Request
 $teamName = $_POST['teamName'] ?? null;
 
 if ($teamName === null || empty($teamName)) {
     echo json_encode(["success" => false, "message" => "Teamname fehlt."]);
-    $conn->close();
-    exit();
+    exit;
 }
 
-// SQL-Abfrage, um die group_id basierend auf dem Teamnamen zu finden
-$stmt = $conn->prepare("SELECT id FROM groups WHERE name = ?");
-$stmt->bind_param("s", $teamName);
-$stmt->execute();
-$result = $stmt->get_result();
+// 1. group_id basierend auf dem Teamnamen holen
+$sql = "SELECT id FROM groups WHERE name = :teamName";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['teamName' => $teamName]);
+$group = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows === 0) {
+if (!$group) {
     echo json_encode(["success" => false, "message" => "Team nicht gefunden."]);
-    $stmt->close();
-    $conn->close();
-    exit();
+    exit;
 }
 
-$row = $result->fetch_assoc();
-$groupId = $row['id'];
-$stmt->close();
+$groupId = $group['id'];
 
-// Jetzt die Benutzernamen abrufen, die diese group_id haben
-$stmt = $conn->prepare("SELECT username FROM users WHERE group_id = ?");
-$stmt->bind_param("i", $groupId); // 'i' für Integer
-$stmt->execute();
-$result = $stmt->get_result();
+// 2. Mitglieder abrufen
+$sql = "SELECT username FROM users WHERE group_id = :groupId";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['groupId' => $groupId]);
 
-$members = [];
-while($row = $result->fetch_assoc()) {
-    $members[] = $row['username'];
-}
+$members = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 echo json_encode([
     "success" => true,
     "teamName" => $teamName,
     "members" => $members
 ]);
-
-$stmt->close();
-$conn->close();
 ?>

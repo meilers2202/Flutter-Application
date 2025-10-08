@@ -36,7 +36,7 @@ class Fields {
   // Factory-Methode zum Erstellen eines Field-Objekts aus JSON-Daten
   factory Fields.fromJson(Map<String, dynamic> json) {
     return Fields(
-      id: int.parse(json['id'] as String),
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
       fieldname: json['fieldname'] as String,
       description: json['description'] as String?,
       rules: json['rules'] as String?,
@@ -45,8 +45,8 @@ class Fields {
       postalcode: json['postalcode'] as String?,
       city: json['city'] as String?,
       company: json['company'] as String?,
-      fieldOwnerId: int.parse(json['field_owner_id'] as String),
-      checkstate: int.parse(json['checkstate'] as String),
+      fieldOwnerId: json['field_owner_id'] is int ? json['field_owner_id'] : int.parse(json['field_owner_id'].toString()),
+      checkstate: json['checkstate'] is int ? json['checkstate'] : int.parse(json['checkstate'].toString()),
     );
   }
 }

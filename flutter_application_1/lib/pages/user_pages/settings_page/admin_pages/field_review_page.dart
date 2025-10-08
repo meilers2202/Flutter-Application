@@ -232,52 +232,75 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
             ),
             const Divider(),
+            LayoutBuilder(
+              builder: (context, constraints) {
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _currentField.checkstate != 1 ? () => _updateFieldStatus(1) : null, // Status 1: Genehmigt
-                  icon: const Icon(Icons.check_circle_outline),
-                  style: ElevatedButton.styleFrom( // STYLE verschoben
-                    foregroundColor: Colors.white, 
-                    backgroundColor: Colors.green,
-                  ),
-                  label: const Text('Genehmigen'), // LABEL ans Ende
-                ),
-                ElevatedButton.icon(
-                  onPressed: _currentField.checkstate != 2 ? () => _updateFieldStatus(2) : null, // Status 3: Abgelehnt
-                  icon: const Icon(Icons.info_outline),
-                  style: ElevatedButton.styleFrom( // STYLE verschoben
-                    foregroundColor: Colors.white, 
-                    backgroundColor: const Color.fromARGB(255, 249, 170, 0),
-                  ),
-                  label: const Text('Wird geklärt'), // LABEL ans Ende
-                ),
-                ElevatedButton.icon(
-                  onPressed: _currentField.checkstate != 3 ? () => _updateFieldStatus(3) : null, // Status 3: Abgelehnt
-                  icon: const Icon(Icons.cancel_outlined),
-                  style: ElevatedButton.styleFrom( // STYLE verschoben
-                    foregroundColor: Colors.white, 
-                    backgroundColor: Colors.red,
-                  ),
-                  label: const Text('Ablehnen'), // LABEL ans Ende
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity, // Nun funktioniert die volle Breite
-              child: ElevatedButton.icon(
-                onPressed: _confirmDelete, // Ruft die Sicherheitsabfrage auf
-                icon: const Icon(Icons.delete_forever, color: Colors.white),
-                style: ElevatedButton.styleFrom( // STYLE VOR LABEL verschoben
-                  backgroundColor: Colors.red.shade700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                label: const Text('Feld unwiderruflich LÖSCHEN'), // LABEL ans Ende
-              ),
+                const double spacing = 10;
+
+                // Anzahl Buttons pro Zeile je nach Breite
+                final int buttonsPerRow = constraints.maxWidth > 600 ? 4 : 2;
+
+                // verfügbare Breite abzüglich spacing
+                final double buttonWidth =
+                    (constraints.maxWidth - ((buttonsPerRow - 1) * spacing)) / buttonsPerRow;
+
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: buttonWidth,
+                      child: ElevatedButton.icon(
+                        onPressed: _currentField.checkstate != 1 ? () => _updateFieldStatus(1) : null,
+                        icon: const Icon(Icons.check_circle_outline),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.green,
+                        ),
+                        label: const Text('Genehmigen'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: buttonWidth,
+                      child: ElevatedButton.icon(
+                        onPressed: _currentField.checkstate != 2 ? () => _updateFieldStatus(2) : null,
+                        icon: const Icon(Icons.info_outline),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: const Color.fromARGB(255, 249, 170, 0),
+                        ),
+                        label: const Text('Wird geklärt'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: buttonWidth,
+                      child: ElevatedButton.icon(
+                        onPressed: _currentField.checkstate != 3 ? () => _updateFieldStatus(3) : null,
+                        icon: const Icon(Icons.cancel_outlined),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.red,
+                        ),
+                        label: const Text('Ablehnen'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: buttonWidth,
+                      child: ElevatedButton.icon(
+                        onPressed: _confirmDelete,
+                        icon: const Icon(Icons.delete_forever, color: Colors.white),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        label: const Text('LÖSCHEN'),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

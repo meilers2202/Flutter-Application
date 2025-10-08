@@ -1,27 +1,26 @@
-import 'package:flutter/material.dart';
-import 'package:pewpew_connect/pages/login/login_page.dart'; // Hinzugefügt
-import 'package:pewpew_connect/pages/login/register_page.dart';
-import 'package:pewpew_connect/pages/login/register_personaldata_page.dart';
-import 'package:pewpew_connect/pages/user_pages/main_page/main_page.dart';
-import 'package:pewpew_connect/pages/user_pages/main_page/all_teams_page/all_teams_page.dart';
-import 'package:pewpew_connect/pages/user_pages/main_page/all_teams_page/join_team_page/join_team_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_register.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/profile_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/settings_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/admin_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/user_management_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/block_list_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_owner_list.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/teams_management_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_login.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/field_owner_main.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/create_field.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/field_details_page.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/edit_field_page.dart';
-import 'package:pewpew_connect/pages/policy/register_policy.dart';
-import 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_page.dart';
 
-void main() => runApp(const MyApp());
+import 'service/imports.dart';
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    final client = super.createHttpClient(context);
+    // Ignoriere Zertifikatfehler (nur für Entwicklung / NICHT in Produktion)
+    client.badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
+    return client;
+  }
+}
+
+void main() {
+  // Setze die Override nur, wenn wir NICHT im Web laufen.
+  // (Browser erlauben kein programmatisches Ignorieren von Zertifikatsfehlern.)
+  if (!kIsWeb) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
+
+  runApp(const MyApp());
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -96,27 +95,27 @@ class _MyAppState extends State<MyApp> {
       initialRoute: '/login',
       routes: {
         '/login': (context) => WelcomePage(
-          toggleTheme: _toggleTheme,
-          setUserData: _setUserData,
-        ),
+              toggleTheme: _toggleTheme,
+              setUserData: _setUserData,
+            ),
         '/register': (context) => RegisterPage(
-          toggleTheme: _toggleTheme,
-        ),
+              toggleTheme: _toggleTheme,
+            ),
         '/personalData': (context) => const PersonalDataPage(
-          username: '',
-          password: '',
-        ),
+              username: '',
+              password: '',
+            ),
         '/main': (context) => MainPage(
-          toggleTheme: _toggleTheme,
-          userRole: _setRole,
-          userTeam: _setTeam,
-          currentUsername: _currentUsername,
-          onTeamChange: _setUserData,
-        ),
+              toggleTheme: _toggleTheme,
+              userRole: _setRole,
+              userTeam: _setTeam,
+              currentUsername: _currentUsername,
+              onTeamChange: _setUserData,
+            ),
         '/profile': (context) => ProfilePage(username: _currentUsername),
         '/settings': (context) => SettingsPage(
-          toggleTheme: _toggleTheme,
-        ),
+              toggleTheme: _toggleTheme,
+            ),
         '/admin': (context) => const AdminPage(),
         '/admin/users': (context) => const UserManagementPage(),
         '/admin/fieldowners': (context) => const FieldOwnerList(),
@@ -125,23 +124,24 @@ class _MyAppState extends State<MyApp> {
         '/admin/fields': (context) => const FieldList(),
         '/allTeams': (context) => const AllTeams(),
         '/fieldownerlogin': (context) => FieldOwnerLogin(
-          toggleTheme: _toggleTheme,
-          setUserData: _setUserData,
-        ),
+              toggleTheme: _toggleTheme,
+              setUserData: _setUserData,
+            ),
         '/fieldownerregister': (context) => RegisterFieldOwnerPage(
-          toggleTheme: _toggleTheme,
-        ),
+              toggleTheme: _toggleTheme,
+            ),
         '/fieldownermain': (context) => FieldOwnerMainPage(
-          currentUsername: _currentUsername ?? '', // Stellen Sie sicher, dass ein String übergeben wird
-        ),
-        '/fieldcreate': (context) => CreateField(currentUsername: _currentUsername!),
+              currentUsername: _currentUsername ?? '',
+            ),
+        '/fieldcreate': (context) => CreateField(
+              currentUsername: _currentUsername ?? '',
+            ),
         '/fielddetails': (context) {
-          // Hier rufen wir das übergebene Field-Objekt ab
+          // Übergabe eines Field-Objekts via Navigator.arguments erwartet
           final field = ModalRoute.of(context)!.settings.arguments as Field;
-          // Geben Sie die neue Detailseite zurück und übergeben Sie das Field-Objekt
           return FieldDetailsPage(field: field);
         },
-        '/editfield': (context) { // NEUE ROUTE HINZUGEFÜGT
+        '/editfield': (context) {
           final fieldToEdit = ModalRoute.of(context)!.settings.arguments as Field;
           return EditFieldPage(field: fieldToEdit);
         },
@@ -154,7 +154,7 @@ class _MyAppState extends State<MyApp> {
             builder: (context) {
               return JoinTeam(
                 teamName: teamName,
-                currentUsername: _currentUsername!, 
+                currentUsername: _currentUsername ?? '',
               );
             },
           );

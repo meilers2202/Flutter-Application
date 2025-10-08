@@ -1,30 +1,24 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-require_once 'db_config.php';
+require_once 'db_service.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    echo json_encode(["success" => false, "message" => "Verbindungsfehler: " . $conn->connect_error]);
-    exit();
+$inputUsername = $_POST['username'] ?? null;
+
+if (!$inputUsername) {
+    echo json_encode(["success" => false, "message" => "Kein Benutzername angegeben."]);
+    exit;
 }
 
-if (isset($_POST['username'])) {
-    $inputUsername = $_POST['username'];
+try {
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :username");
+    $stmt->execute(['username' => $inputUsername]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
-    $stmt->bind_param("s", $inputUsername);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        echo json_encode(["success" => true, "userId" => (int)$row['id']]);
+    if ($user) {
+        echo json_encode(["success" => true, "userId" => (int)$user['id']]);
     } else {
         echo json_encode(["success" => false, "message" => "Benutzer nicht gefunden."]);
     }
-} else {
-    echo json_encode(["success" => false, "message" => "Kein Benutzername angegeben."]);
+} catch (PDOException $e) {
+    echo json_encode(["success" => false, "message" => "Fehler: " . $e->getMessage()]);
 }
-
-$conn->close();
-?>

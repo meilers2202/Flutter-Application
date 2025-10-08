@@ -1,53 +1,33 @@
 <?php
-require_once 'db_config.php';
-header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+require_once 'db_service.php'; // stellt $pdo bereit
 
-// Verbindung zur Datenbank herstellen
-$conn = new mysqli($servername, $username, $password, $dbname);
+try {
+    $detailed = isset($_GET['detailed']) && $_GET['detailed'] === 'true';
+    $teams = [];
 
-// Prüfen, ob eine detaillierte Abfrage gewünscht ist
-$detailed = isset($_GET['detailed']) && $_GET['detailed'] === 'true';
+    if ($detailed) {
+        // Detaillierte Ansicht mit Mitgliederanzahl
+        $stmt = $pdo->query("
+            SELECT g.id, g.name AS teamName, COUNT(u.id) AS memberCount
+            FROM groups g
+            LEFT JOIN users u ON g.id = u.group_id
+            GROUP BY g.id
+            ORDER BY g.name ASC
+        ");
+        $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$teams = [];
+        echo json_encode(['success' => true, 'teams' => $teams]);
+    } else {
+        // Einfache Teamliste
+        $stmt = $pdo->query("SELECT id, name FROM groups ORDER BY name ASC");
+        $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-if ($detailed) {
-    // Abfrage für die detaillierte Ansicht mit Mitgliedszahl
-    $stmt = $conn->prepare("SELECT g.id, g.name AS teamName, COUNT(u.id) AS memberCount FROM groups g LEFT JOIN users u ON g.id = u.group_id GROUP BY g.id ORDER BY g.name ASC");
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    while ($row = $result->fetch_assoc()) {
-        $teams[] = [
-            'id' => $row['id'],
-            'teamName' => $row['teamName'],
-            'memberCount' => (int)$row['memberCount'],
-        ];
+        echo json_encode(['success' => true, 'teams' => $teams]);
     }
 
-    echo json_encode(['success' => true, 'teams' => $teams]);
-
-} else {
-    // Abfrage für die einfache Teamliste (ID und Name)
-    $stmt = $conn->prepare("SELECT id, name FROM groups ORDER BY name ASC");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $teams[] = [
-            'id' => $row['id'],
-            'name' => $row['name'],
-        ];
-    }
-    
-    echo json_encode(["success" => true, "teams" => $teams]);
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Fehler bei der Datenbankabfrage: ' . $e->getMessage()
+    ]);
 }
-
-if (isset($stmt)) {
-    $stmt->close();
-}
-$conn->close();
-
-?>

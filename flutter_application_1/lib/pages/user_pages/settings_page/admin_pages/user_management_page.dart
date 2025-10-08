@@ -46,14 +46,81 @@ class _UserManagementPageState extends State<UserManagementPage> {
       }
     } 
   }
-  
-  // Platzhalter für die zukünftige Bearbeitungsfunktion
-  void _openUserEdit(String username) {
-    ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Öffne Bearbeitung für $username')),
-        );
+
+  Future<void> _blockUser(String username) async {
+    final url = Uri.parse('$ipAddress/block_user.php');
+    try {
+      final response = await http.post(url, body: {'username': username});
+      final data = json.decode(response.body);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'] ?? 'Fehler beim Blockieren')),
+      );
+
+      if (data['success'] == true) {
+        _fetchAllUsers(); // Liste aktualisieren
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler: $e')),
+      );
+    }
   }
 
+  Future<void> _deleteUser(String username) async {
+    final url = Uri.parse('$ipAddress/delete_user.php');
+    try {
+      final response = await http.post(url, body: {'username': username});
+      final data = json.decode(response.body);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'] ?? 'Fehler beim Löschen')),
+      );
+
+      if (data['success'] == true) {
+        _fetchAllUsers(); // Liste aktualisieren
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler: $e')),
+      );
+    }
+  }
+
+  
+  void _openUserEdit(String username) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.block, color: Colors.red),
+                title: const Text('Benutzer blockieren'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _blockUser(username);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Benutzer löschen'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _deleteUser(username);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -218,8 +218,8 @@ class _MainPageState extends State<MainPage> {
         child: Column(
           children: [
             Container(
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: 69,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               decoration: const BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage('assets/images/app_bgr2.jpg'),
@@ -229,16 +229,20 @@ class _MainPageState extends State<MainPage> {
               child: SafeArea(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text(
                       'Menü',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
+                      padding: EdgeInsets.zero, // 👈 entfernt Standard-Padding
+                      constraints: const BoxConstraints(), // 👈 entfernt Mindestgröße
                       onPressed: () {
                         Navigator.pop(context);
                       },

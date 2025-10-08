@@ -24,6 +24,7 @@ dependencies:
   # Standard Flutter Icons
   cupertino_icons: ^1.0.8
   package_info_plus: ^9.0.0
+  lehttp_overrides: ^1.0.3
 
 dev_dependencies:
   flutter_test:

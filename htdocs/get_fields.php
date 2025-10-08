@@ -1,32 +1,29 @@
 <?php
-require_once 'db_config.php';
-header("Content-Type: application/json; charset=UTF-8");
+require_once 'db_service.php'; // stellt $pdo bereit
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+try {
+    $stmt = $pdo->query("SELECT id, fieldname, description, rules, street, housenumber, postalcode, city, company, field_owner_id, checkstate FROM fields");
+    $fields = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-if ($conn->connect_error) {
-    // Fehler bei der Datenbankverbindung
-    echo json_encode(["success" => false, "message" => "Verbindungsfehler: " . $conn->connect_error]);
-    exit();
-}
-
-// Wählt ALLE Felder (Spalten) aus der 'fields'-Tabelle
-$sql = "SELECT id, fieldname, description, rules, street, housenumber, postalcode, city, company, field_owner_id, checkstate FROM fields";
-$result = $conn->query($sql);
-
-$fields = []; // Variable für die Felder
-if ($result && $result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        // Fügt jede Zeile (jedes Feld) zur Liste hinzu
-        $fields[] = $row; 
+    // Typcasting der int-Felder vor json_encode
+    if ($fields) {
+        foreach ($fields as &$field) {
+            $field['id'] = (int)$field['id'];
+            $field['field_owner_id'] = (int)$field['field_owner_id'];
+            // Falls checkstate auch integer ist, casten:
+            $field['checkstate'] = isset($field['checkstate']) ? (int)$field['checkstate'] : null;
+            // Weitere Integerfelder bei Bedarf hier casten
+        }
     }
-    
-    // Gibt die gesamte Feldliste unter dem Key 'fields' zurück
-    echo json_encode(["success" => true, "fields" => $fields]);
-} else {
-    // Keine Felder gefunden
-    echo json_encode(["success" => true, "fields" => [], "message" => "Keine registrierten Spielfelder gefunden."]);
-}
 
-$conn->close();
-?>
+    echo json_encode([
+        "success" => true,
+        "fields" => $fields ?: [],
+        "message" => empty($fields) ? "Keine registrierten Spielfelder gefunden." : null
+    ]);
+} catch (PDOException $e) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Fehler bei der Datenbankabfrage: " . $e->getMessage()
+    ]);
+}
