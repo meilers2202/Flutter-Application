@@ -1,24 +1,27 @@
 
 import 'service/imports.dart';
 
+// ########################################### //
+//               Zertifikat umgehen            //
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    // Ignoriere Zertifikatfehler (nur für Entwicklung / NICHT in Produktion)
     client.badCertificateCallback =
         (X509Certificate cert, String host, int port) => true;
     return client;
   }
 }
+// ########################################### //
 
 void main() {
-  // Setze die Override nur, wenn wir NICHT im Web laufen.
-  // (Browser erlauben kein programmatisches Ignorieren von Zertifikatsfehlern.)
+
+// ########################################### //
+//               Zertifikat umgehen            //
   if (!kIsWeb) {
     HttpOverrides.global = MyHttpOverrides();
   }
-
+// ########################################### //
   runApp(const MyApp());
 }
 
@@ -123,6 +126,7 @@ class _MyAppState extends State<MyApp> {
         '/admin/teams': (context) => const TeamsManagementPage(),
         '/admin/fields': (context) => const FieldList(),
         '/allTeams': (context) => const AllTeams(),
+        '/fieldslist': (context) => const FieldListPage(),
         '/fieldownerlogin': (context) => FieldOwnerLogin(
               toggleTheme: _toggleTheme,
               setUserData: _setUserData,

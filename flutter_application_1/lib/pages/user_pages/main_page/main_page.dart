@@ -229,7 +229,7 @@ class _MainPageState extends State<MainPage> {
               child: SafeArea(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text(
                       'Menü',
@@ -382,6 +382,25 @@ class _MainPageState extends State<MainPage> {
                   ),
                   child: const Icon(
                     Icons.list,
+                    color: Colors.white,
+                    size: 50,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/fieldslist');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
+                    minimumSize: const Size(100, 100),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: const Icon(
+                    Icons.area_chart_outlined,
                     color: Colors.white,
                     size: 50,
                   ),

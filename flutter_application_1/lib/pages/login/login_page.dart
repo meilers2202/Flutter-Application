@@ -114,7 +114,6 @@ class _WelcomePageState extends State<WelcomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Web-App läuft!", style: const TextStyle(fontSize: 24)),
               Text(
                 'Bitte melde dich an',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(

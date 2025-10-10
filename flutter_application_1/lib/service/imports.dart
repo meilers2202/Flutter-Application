@@ -23,3 +23,5 @@ export 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/
 export 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/edit_field_page.dart';
 export 'package:pewpew_connect/pages/policy/register_policy.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_page.dart';
+export 'package:pewpew_connect/pages/user_pages/main_page/field_page2.dart';
+export 'package:pewpew_connect/pages/user_pages/main_page/field_review_page2.dart';
