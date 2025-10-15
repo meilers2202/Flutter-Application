@@ -156,102 +156,122 @@ class PersonalDataPageState extends State<PersonalDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Bitte registriere dich',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 15),
-                    Text(
-                      '2. Personenbezogene Daten',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTextField(_emailController, 'E-Mail', false),
-                    const SizedBox(height: 5),
-                    _buildTextField(_cityController, 'Stadt', false),
-                    const SizedBox(height: 5),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Team',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      initialValue: _selectedTeamName,
-                      items: _teams.map<DropdownMenuItem<String>>((team) {
-                        return DropdownMenuItem<String>(
-                          value: team['name'],
-                          child: Text(team['name']),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedTeamName = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Bitte wähle ein Team aus.';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _checkPolicyAndRegister, // **WICHTIG: Funktion geändert**
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 90, 111, 78),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
-                      ),
-                      child: const Text(
-                        'Registrieren',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: InkWell(
-                        onTap: () {
-                          // KORREKTUR: Einfach die aktuelle Seite aus dem Stack entfernen.
-                          // Dies navigiert zur Seite, die VOR der PersonalDataPage lag (z.B. RegisterPage).
-                          Navigator.of(context).pop(); 
-                        },
-                        child: Text(
-                          "Zurück",
-                          style: TextStyle(
-                            fontSize: 16,
-                            decoration: TextDecoration.underline,
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/app_bgr.jpg',
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  color: Colors.black.withOpacity(0.4),
+                ),
+              ],
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Bitte registriere dich',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 15),
+                        Text(
+                          '2. Personenbezogene Daten',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(context, _emailController, 'E-Mail', false),
+                        const SizedBox(height: 5),
+                        _buildTextField(context, _cityController, 'Stadt', false),
+                        const SizedBox(height: 5),
+                        DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Team',
+                            border: OutlineInputBorder(),
+                            filled: true,
+                          ),
+                          initialValue: _selectedTeamName,
+                          items: _teams.map<DropdownMenuItem<String>>((team) {
+                            return DropdownMenuItem<String>(
+                              value: team['name'],
+                              child: Text(team['name']),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedTeamName = newValue;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Bitte wähle ein Team aus.';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: _checkPolicyAndRegister, // **WICHTIG: Funktion geändert**
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 90, 111, 78),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
+                          ),
+                          child: const Text(
+                            'Registrieren',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: InkWell(
+                            onTap: () {
+                              // KORREKTUR: Einfach die aktuelle Seite aus dem Stack entfernen.
+                              // Dies navigiert zur Seite, die VOR der PersonalDataPage lag (z.B. RegisterPage).
+                              Navigator.of(context).pop(); 
+                            },
+                            child: Text(
+                              "Zurück",
+                              style: TextStyle(
+                                fontSize: 16,
+                                decoration: TextDecoration.underline,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        ],
+      )
     );
   }
 
@@ -278,7 +298,11 @@ class PersonalDataPageState extends State<PersonalDataPage> {
   }
 
   static Widget _buildTextField(
-      TextEditingController controller, String labelText, bool obscureText) {
+    BuildContext context, // 👈 context als Parameter hinzufügen
+    TextEditingController controller,
+    String labelText,
+    bool obscureText,
+  ) {
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -286,10 +310,13 @@ class PersonalDataPageState extends State<PersonalDataPage> {
         labelText: labelText,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Colors.grey),
+        labelStyle: TextStyle(
+          color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
+        ),
       ),
-      style: const TextStyle(color: Colors.black),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
     );
   }
 }

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
+
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class AllTeams extends StatefulWidget {
   const AllTeams({super.key});
@@ -11,17 +10,31 @@ class AllTeams extends StatefulWidget {
 }
 
 class _AllTeamsState extends State<AllTeams> {
-  // Das Team-Objekt hat 'teamName' (String) und 'memberCount' (int/String)
-  List<dynamic> _teams = []; 
+  List<dynamic> _teams = [];
   bool _isLoading = true;
+
+  // NEU: Benutzerinfos
+  String? _currentUsername;
+  String? _userTeam;
 
   @override
   void initState() {
     super.initState();
-    _fetchTeams();
+
+    // Warte, bis Build ausgeführt wird, um ModalRoute nutzen zu können
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+      if (args != null) {
+        _currentUsername = args['currentUsername'] as String?;
+        _userTeam = args['userTeam'] as String?;
+      }
+
+      await _fetchTeams();
+
+    });
   }
 
-  // Funktion zum Abrufen der Teams (unverändert)
   Future<void> _fetchTeams() async {
     setState(() {
       _isLoading = true;
@@ -36,6 +49,13 @@ class _AllTeamsState extends State<AllTeams> {
         setState(() {
           _teams = data['teams'];
         });
+
+        // ✅ Alle Teams einzeln ausgeben
+        //print('--------------TeamPage DEBUG--------------');
+        // for (var team in _teams) {
+        //   print('Teamname: ${team['teamName']}, Mitglieder: ${team['memberCount']}');
+        // }
+        // print('------------------------------------------');
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -61,7 +81,7 @@ class _AllTeamsState extends State<AllTeams> {
         title: const Text(
           'Team beitreten',
           style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
+            color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -76,7 +96,7 @@ class _AllTeamsState extends State<AllTeams> {
           ),
         ),
       ),
-      body: RefreshIndicator( // Ermöglicht Pull-to-Refresh
+      body: RefreshIndicator(
         onRefresh: _fetchTeams,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -97,60 +117,46 @@ class _AllTeamsState extends State<AllTeams> {
                     itemCount: _teams.length,
                     itemBuilder: (context, index) {
                       final team = _teams[index];
-                      // Sicherstellen, dass die Member-Anzahl als String behandelt wird
-                      final memberCount = team['memberCount']?.toString() ?? '0'; 
+                      final memberCount = team['memberCount']?.toString() ?? '0';
 
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                        elevation: 4, // Etwas Schatten für besseres Aussehen
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10), // Abgerundete Ecken
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                          
-                          // Icon des Teams
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor, 
+                              color: const Color.fromARGB(255, 64, 83, 255),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(Icons.group, color: Colors.white, size: 28),
                           ),
-                          
-                          // Teamname
                           title: Text(
                             team['teamName'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.black87,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                           ),
-                          
-                          // Mitgliederanzahl
-                          subtitle: Text(
-                            '$memberCount Mitglieder',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                          ),
-                          
-                          // Aktions-Icon (Beitreten)
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            color: Colors.blueGrey,
-                            size: 16,
-                          ),
-                          
-                          onTap: () {
-                            // Übergebe den Team-Namen als Argument
-                            Navigator.of(context).pushNamed(
-                              '/joinTeam',
-                              arguments: team['teamName'],
+                          subtitle: Text('$memberCount Mitglieder', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                          trailing: const Icon(Icons.arrow_forward_ios, color: Colors.blueGrey, size: 16),
+                          onTap: () async {
+                            final result = await Navigator.of(context).pushNamed(
+                              '/teamDetails',
+                              arguments: {
+                                'teamName': team['teamName'],
+                                'username': _currentUsername,
+                                'userCurrentTeam': _userTeam,
+                              },
                             );
+
+                            if (result != null && result is String) {
+                              setState(() {
+                                _userTeam = result;
+                              });
+                              await _fetchTeams();
+                            }
                           },
                         ),
                       );

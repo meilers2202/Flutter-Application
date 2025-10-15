@@ -97,78 +97,98 @@ class _FieldOwnerLoginState extends State<FieldOwnerLogin> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Bitte melde dich als Field Owner an',
-                textAlign: TextAlign.center, // Diese Zeile zentriert den Text
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 15),
-              _buildTextField(_usernameController, 'Benutzername', false),
-              const SizedBox(height: 5),
-              _buildTextField(_passwordController, 'Passwort', true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 90, 111, 78),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/app_bgr.jpg',
+                  fit: BoxFit.cover,
                 ),
-                child: const Text(
-                  'Anmelden',
-                  style: TextStyle(color: Colors.white),
+                Container(
+                  color: Colors.black.withOpacity(0.4),
                 ),
-              ),
-              if (_showDeveloperButton)
-                Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Hier navigierst du am Login vorbei
-                        Navigator.of(context).pushNamed('/main');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
-                      ),
-                      child: const Text(
-                        'Entwicklermodus (Login überspringen)',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).pushNamed(
-                      '/fieldownerregister',
-                    );
-                  },
-                  child: Text(
-                    "Registrieren",
+              ],
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Bitte melde dich als Field Owner an',
+                    textAlign: TextAlign.center, // Diese Zeile zentriert den Text
                     style: TextStyle(
-                      fontSize: 16,
-                      decoration: TextDecoration.underline,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 25,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    )
+                  ),
+                  const SizedBox(height: 15),
+                  _buildTextField(context, _usernameController, 'Benutzername', false),
+                  const SizedBox(height: 5),
+                  _buildTextField(context, _passwordController, 'Passwort', true),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 90, 111, 78),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    ),
+                    child: const Text(
+                      'Anmelden',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                ),
+                  if (_showDeveloperButton)
+                    Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Hier navigierst du am Login vorbei
+                            Navigator.of(context).pushNamed('/main');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
+                          ),
+                          child: const Text(
+                            'Entwicklermodus (Login überspringen)',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.of(context).pushNamed(
+                          '/fieldownerregister',
+                        );
+                      },
+                      child: Text(
+                        "Registrieren",
+                        style: TextStyle(
+                          fontSize: 16,
+                          decoration: TextDecoration.underline,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ]
       ),
     );
   }
@@ -196,7 +216,11 @@ class _FieldOwnerLoginState extends State<FieldOwnerLogin> {
   }
 
   static Widget _buildTextField(
-      TextEditingController controller, String labelText, bool obscureText) {
+    BuildContext context, // 👈 context als Parameter hinzufügen
+    TextEditingController controller,
+    String labelText,
+    bool obscureText,
+  ) {
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -204,10 +228,13 @@ class _FieldOwnerLoginState extends State<FieldOwnerLogin> {
         labelText: labelText,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Colors.grey),
+        labelStyle: TextStyle(
+          color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
+        ),
       ),
-      style: const TextStyle(color: Colors.black),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
     );
   }
 }

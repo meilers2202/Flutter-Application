@@ -26,19 +26,83 @@ class _BlocklistPageState extends State<BlocklistPage> {
       final Map<String, dynamic> data = json.decode(response.body);
 
       if (data['success'] == true) {
-        setState(() {
-          _blockedUsers = List<String>.from(data['users']);
-        });
+        if (mounted) {
+          setState(() {
+            _blockedUsers = List<String>.from(data['users']);
+          });
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'])),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'])),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Laden: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Laden: $e')),
+        );
+      }
     }
+  }
+
+  Future<void> _unblockUser(String username) async {
+    final url = Uri.parse('$ipAddress/unblock_user.php');
+    try {
+      final response = await http.post(url, body: {'username': username});
+      final data = json.decode(response.body);
+
+      if (data['success'] == true && mounted) {
+        // Benutzer sofort lokal entfernen
+        setState(() {
+          _blockedUsers.remove(username);
+        });
+      }
+
+      // SnackBar anzeigen
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Fehler beim Entblocken')),
+        );
+      }
+
+      // Optional: Serverliste aktualisieren, falls nötig
+      // await _fetchBlockedUsers();
+
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verbindungsfehler: $e')),
+        );
+      }
+    }
+  }
+
+  void _openUnblockDialog(String username) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.block, color: Colors.red),
+                title: const Text('Benutzer entblocken'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _unblockUser(username);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -78,11 +142,27 @@ class _BlocklistPageState extends State<BlocklistPage> {
                 itemBuilder: (context, index) {
                   final username = _blockedUsers[index];
                   return Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.block, color: Colors.red),
-                      title: Text(username),
-                      // TODO: hier könnte man „Entblocken“ hinzufügen
-                    ),
+
+                        child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                          leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: const Icon(
+                                  Icons.person_outline,
+                                  color: Color.fromARGB(255, 0, 0, 0),
+                                  size: 24,
+                                ),
+                            ),
+                          title: Text(
+                            username,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          trailing: IconButton( 
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _openUnblockDialog(username),
+                            ),
+                            onTap: () => _openUnblockDialog(username),
+                        ),
                   );
                 },
               ),

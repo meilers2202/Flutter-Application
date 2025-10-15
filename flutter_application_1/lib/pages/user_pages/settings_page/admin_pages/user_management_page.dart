@@ -11,115 +11,180 @@ class UserManagementPage extends StatefulWidget {
 }
 
 class _UserManagementPageState extends State<UserManagementPage> {
-  
-  List<String> _users = []; 
+  List<String> _users = [];
+
   @override
   void initState() {
     super.initState();
     _fetchAllUsers();
   }
 
+  Future<void> _showError(String message) async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   Future<void> _fetchAllUsers() async {
-    final url = Uri.parse('$ipAddress/get_all_users.php');
     try {
-      final response = await http.post(url);
-      final Map<String, dynamic> data = json.decode(response.body);
+      final response = await http.post(Uri.parse('$ipAddress/get_all_users.php'));
+      final data = json.decode(response.body) as Map<String, dynamic>;
 
       if (data['success'] == true) {
         if (mounted) {
-          setState(() {
-            _users = List<String>.from(data['users']);
-          });
+          setState(() => _users = List<String>.from(data['users']));
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'])),
-          );
-        }
+        _showError(data['message'] ?? 'Fehler beim Laden');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Verbindungsfehler: $e')),
-        );
-      }
-    } 
+      _showError('Verbindungsfehler: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchProfileData(String username) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$ipAddress/get_profile.php'),
+        body: {'username': username},
+      );
+      return json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Verbindungsfehler: $e'};
+    }
   }
 
   Future<void> _blockUser(String username) async {
-    final url = Uri.parse('$ipAddress/block_user.php');
     try {
-      final response = await http.post(url, body: {'username': username});
+      final response = await http.post(
+        Uri.parse('$ipAddress/block_user.php'),
+        body: {'username': username},
+      );
       final data = json.decode(response.body);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? 'Fehler beim Blockieren')),
-      );
-
-      if (data['success'] == true) {
-        _fetchAllUsers(); // Liste aktualisieren
-      }
+      _showError(data['message'] ?? 'Fehler beim Blockieren');
+      if (data['success'] == true) _fetchAllUsers();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Verbindungsfehler: $e')),
-      );
+      _showError('Verbindungsfehler: $e');
     }
   }
 
   Future<void> _deleteUser(String username) async {
-    final url = Uri.parse('$ipAddress/delete_user.php');
     try {
-      final response = await http.post(url, body: {'username': username});
+      final response = await http.post(
+        Uri.parse('$ipAddress/delete_user.php'),
+        body: {'username': username},
+      );
       final data = json.decode(response.body);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? 'Fehler beim Löschen')),
-      );
-
-      if (data['success'] == true) {
-        _fetchAllUsers(); // Liste aktualisieren
-      }
+      _showError(data['message'] ?? 'Fehler beim Löschen');
+      if (data['success'] == true) _fetchAllUsers();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Verbindungsfehler: $e')),
-      );
+      _showError('Verbindungsfehler: $e');
     }
   }
 
-  
-  void _openUserEdit(String username) {
+  void _openUserEdit(String username) async {
+    final result = await _fetchProfileData(username);
+    if (!mounted) return;
+
+    if (result['success'] != true) {
+      _showError('Fehler: ${result['message']}');
+      return;
+    }
+
+    final user = result['user'];
+    final email = user['email'] ?? '';
+    final city = user['city'] ?? '';
+    final team = user['team'] ?? '';
+    final memberSince = user['memberSince'] ?? '';
+    final role = user['role'] ?? '';
+    final teamRole = user['teamrole'] ?? '';
+
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      isScrollControlled: true,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.block, color: Colors.red),
-                title: const Text('Benutzer blockieren'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _blockUser(username);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Benutzer löschen'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _deleteUser(username);
-                },
-              ),
-            ],
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5.0), // 5px innen
+          child: Container( // 👈 Dieser Container begrenzt die Breite
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 25), // 10px Gesamtabstand (5+5)
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        username,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(height: 1),
+                      _buildInfoRow(Icons.email, email),
+                      _buildInfoRow(Icons.location_city, city),
+                      const Divider(height: 1),
+                      _buildInfoRow(Icons.group, team),
+                      _buildInfoRow(Icons.badge, teamRole),
+                      const Divider(height: 1),
+                      _buildInfoRow(Icons.calendar_today, memberSince),
+                      const Divider(height: 1),
+                      _buildInfoRow(Icons.admin_panel_settings, role),
+                      const Divider(height: 1),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                _buildActionTile(
+                  Icons.block,
+                  'Benutzer blockieren',
+                  Colors.red,
+                  () => _confirmAndExecute(context, () => _blockUser(username)),
+                ),
+                _buildActionTile(
+                  Icons.remove_circle_outline,
+                  'Benutzer entfernen',
+                  Colors.orange,
+                  () => _confirmAndExecute(context, () => _deleteUser(username)),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          const SizedBox(width: 6),
+          Text(text, style: TextStyle(color: Colors.grey[700])),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionTile(IconData icon, String title, Color color, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(title),
+      onTap: onTap,
+    );
+  }
+
+  void _confirmAndExecute(BuildContext context, Future<void> Function() action) {
+    Navigator.pop(context); // schließt das BottomSheet
+    action(); // führt Aktion aus (Block/Löschen)
   }
 
   @override
@@ -127,12 +192,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Benutzerverwaltung', 
-          style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          'Benutzerverwaltung',
+          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         flexibleSpace: Container(
@@ -144,59 +205,42 @@ class _UserManagementPageState extends State<UserManagementPage> {
           ),
         ),
       ),
-      body: RefreshIndicator( 
+      body: RefreshIndicator(
         onRefresh: _fetchAllUsers,
         child: _users.isEmpty
-              ? const Center(
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.people_alt_outlined, size: 50, color: Colors.grey),
-                        SizedBox(height: 10),
-                        Text(
-                          'Keine Benutzer gefunden.',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        Text(
-                          'Zum Aktualisieren herunterziehen.',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                )
-              : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                  itemCount: _users.length,
-                  itemBuilder: (context, index) {
-                    final user = _users[index];
-                    return Card( 
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 6.0),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                          leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                child: const Icon(
-                                  Icons.person_outline,
-                                  color: Color.fromARGB(255, 0, 0, 0),
-                                  size: 24,
-                                ),
-                            ),
-                          title: Text(
-                            user,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          trailing: IconButton( 
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _openUserEdit(user),
-                            ),
-                            onTap: () => _openUserEdit(user),
-                        ),
-                    );
-                  },
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.people_alt_outlined, size: 50, color: Colors.grey),
+                    SizedBox(height: 10),
+                    Text('Keine Benutzer gefunden.', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    Text('Zum Aktualisieren herunterziehen.', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  ],
                 ),
-        ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(8.0),
+                itemCount: _users.length,
+                itemBuilder: (context, index) {
+                  final user = _users[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 6.0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      leading: const Icon(Icons.person_outline, size: 24),
+                      title: Text(user, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () => _openUserEdit(user),
+                      ),
+                      onTap: () => _openUserEdit(user),
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 }

@@ -1,11 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-// WICHTIG: Ersetze 'field_review_page.dart' durch den korrekten Pfad zur neuen Datei
-import 'package:pewpew_connect/service/constants.dart';
 import 'package:pewpew_connect/service/imports.dart';
 
-// NEU: Datenmodell für ein Feld basierend auf der 'fields'-Tabelle
 class Fields2 {
   final int id;
   final String fieldname;

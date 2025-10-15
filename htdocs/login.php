@@ -5,7 +5,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
     $inputUsername = $_POST['username'];
     $inputPassword = $_POST['password'];
 
-    $sql = 'SELECT users.username, users.password, users.email, users.city, users.created_at, users.role, groups.name AS team 
+    $sql = 'SELECT users.username, users.password, users.email, users.city, users.created_at, groups.name AS team 
             FROM users 
             LEFT JOIN groups ON users.group_id = groups.id 
             WHERE users.username = :username';

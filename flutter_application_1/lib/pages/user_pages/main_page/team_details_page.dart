@@ -150,7 +150,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
             // 2. Mitglieder-Sektion
             const Text(
               "👥 Mitglieder des Teams:",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const Divider(height: 15, thickness: 1.5),
             

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
+
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class TeamsManagementPage extends StatefulWidget {
   const TeamsManagementPage({super.key});
@@ -17,10 +16,13 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
   @override
   void initState() {
     super.initState();
-    _fetchAllUsers();
+    _fetchAllTeams();
   }
 
-  Future<void> _fetchAllUsers() async {
+
+
+
+  Future<void> _fetchAllTeams() async {
     final url = Uri.parse('$ipAddress/get_all_teams_management.php');
     try {
       final response = await http.post(url);
@@ -60,7 +62,7 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Field Owners',
+          'Teams',
           style: TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
             fontSize: 28,
@@ -84,23 +86,32 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
           : _teams.isEmpty
               ? const Center(
                   child: Text(
-                    'Keine Benutzer gefunden.',
+                    'Keine Teams gefunden.',
                     style: TextStyle(fontSize: 18),
                   ),
                 )
               : ListView.builder(
                   itemCount: _teams.length,
                   itemBuilder: (context, index) {
-                    final user = _teams[index];
+                    final team = _teams[index];
                     return ListTile(
                       title: Text(
-                        user,
+                        team,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       leading: Icon(
                         Icons.groups,
                         color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
+                      onTap: () {
+                        // Zur Team-Mitglieder-Seite navigieren
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TeamMembersPage(teamName: team),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

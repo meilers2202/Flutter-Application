@@ -85,12 +85,9 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
   @override
   void initState() {
     super.initState();
-    // ⚠️ KORREKTUR des URI-Fehlers in der Ladefunktion:
-    // Die Hilfsfunktionen werden unten korrigiert.
     _fetchAndLoadFields();
   }
 
-  // --- Schritt 1 & 2: ID abrufen und Felder laden (Wird auch zur Aktualisierung verwendet) ---
   Future<void> _fetchAndLoadFields() async {
     setState(() {
       _isLoading = true;
@@ -125,7 +122,6 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
 
   // Hilfsmethode, um die Benutzer-ID vom Server abzurufen
   Future<int?> _fetchUserId(String username) async {
-    // ⚠️ KORREKTUR des URI-Fehlers: 'http://' Protokoll hinzugefügt
     final url = Uri.parse('$ipAddress/get_user_id_by_username.php');
     final response = await http.post(
       url,

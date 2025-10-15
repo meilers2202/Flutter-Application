@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'field_page2.dart'; // Wichtig: Importiere das Fields-Model!
+import 'package:pewpew_connect/service/imports.dart';
+
 
 class FieldReviewPage2 extends StatefulWidget {
   final Fields2 field;
@@ -20,20 +20,8 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
     _currentField = widget.field;
   }
 
-  // Funktion zur Übersetzung des Status-Integers (übernommen aus field_page.dart)
-  String _getCheckstateText(int state) {
-    switch (state) {
-      case 0: return 'In Prüfung';
-      case 1: return 'Genehmigt';
-      case 2: return 'In Klärung';
-      case 3: return 'Abgelehnt';
-      default: return 'Unbekannt';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    String currentStatusText = _getCheckstateText(_currentField.checkstate);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,27 +51,8 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             // Aktueller Status-Bereich
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Aktueller Status:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal)),
-                    Text(
-                      currentStatusText,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: _currentField.checkstate == 1 ? Colors.green : (_currentField.checkstate == 3 ? Colors.red : Colors.orange),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 0),
 
             // Detail-Sektionen
             _buildDetailSection('Feld-Details', [

@@ -6,13 +6,13 @@ import 'package:pewpew_connect/service/constants.dart';
 class JoinTeam extends StatefulWidget {
   final String teamName;
   final String currentUsername;
-  final String? userCurrentTeam; // NEU: Das Team, in dem der Benutzer gerade ist
+  final String? userCurrentTeam; // aktuelles Team des Benutzers
 
   const JoinTeam({
     super.key,
     required this.teamName,
     required this.currentUsername,
-    this.userCurrentTeam, // NEU: Muss beim Aufruf übergeben werden
+    this.userCurrentTeam,
   });
 
   @override
@@ -20,18 +20,18 @@ class JoinTeam extends StatefulWidget {
 }
 
 class _JoinTeamState extends State<JoinTeam> {
-  
-  // Funktion zum Beitreten zum Team (Logik unverändert)
+  bool _isLoading = false;
+
   Future<void> _joinTeam() async {
+    setState(() => _isLoading = true);
+
     final url = Uri.parse('$ipAddress/join_team.php');
     try {
-      final response = await http.post(
-        url,
-        body: {
-          'username': widget.currentUsername,
-          'teamName': widget.teamName,
-        },
-      );
+      final response = await http.post(url, body: {
+        'username': widget.currentUsername,
+        'teamName': widget.teamName,
+      });
+
       final Map<String, dynamic> data = json.decode(response.body);
 
       if (!mounted) return;
@@ -40,31 +40,32 @@ class _JoinTeamState extends State<JoinTeam> {
       );
 
       if (data['success'] == true) {
-        // Bei Erfolg zurück zur Hauptseite navigieren
-        Navigator.of(context).pushNamedAndRemoveUntil('/main', (Route<dynamic> route) => false);
+          // print('New Team ${widget.teamName}');
+          Navigator.pop(context, widget.teamName); // ✅
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Verbindungsfehler: $e')),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1. Prüfen, ob der Benutzer bereits im Team ist
     final isAlreadyMember = widget.userCurrentTeam == widget.teamName;
-    
-    // 2. Prüfen, ob der Benutzer in einem anderen Team ist
-    final isInAnotherTeam = widget.userCurrentTeam != null && widget.userCurrentTeam!.isNotEmpty && !isAlreadyMember;
+    final isInAnotherTeam = widget.userCurrentTeam != null &&
+        widget.userCurrentTeam!.isNotEmpty &&
+        !isAlreadyMember;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.teamName,
           style: const TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
+            color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -85,9 +86,8 @@ class _JoinTeamState extends State<JoinTeam> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              // *** ANZEIGE, WENN BEREITS MITGLIED ***
+            children: [
+              // BEREITS MITGLIED
               if (isAlreadyMember) ...[
                 const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
                 const SizedBox(height: 20),
@@ -103,37 +103,75 @@ class _JoinTeamState extends State<JoinTeam> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                // Button, um einfach zurück zur Hauptseite zu gehen
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  label: const Text('Zurück', style: TextStyle(fontSize: 18)),
+                  label: const Text('Zurück', style: TextStyle(fontSize: 18, color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   ),
                 ),
-              ] 
-              // *** ANZEIGE, WENN MAN IN EINEM ANDEREN TEAM IST ***
+              ]
+              // MITGLIED IN EINEM ANDEREN TEAM
               else if (isInAnotherTeam) ...[
                 const Icon(Icons.warning_amber, color: Colors.orange, size: 80),
                 const SizedBox(height: 20),
                 Text(
                   'Achtung, ${widget.currentUsername}!',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange),
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.orange),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Du bist derzeit Mitglied in einem anderen Team (${widget.userCurrentTeam}). Wenn du Team "${widget.teamName}" beitrittst, verlässt du automatisch dein aktuelles Team.',
-                  style: const TextStyle(fontSize: 18),
+                Text.rich(
+                  TextSpan(
+                    text: 'Du bist derzeit Mitglied in dem Team: ',
+                    style: const TextStyle(fontSize: 18, color: Colors.black),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: '${widget.userCurrentTeam}', // Teamname
+                        style: const TextStyle(
+                          fontSize: 22,
+                          color: Colors.green, // hier die Farbe des Teams
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '.', // Punkt am Ende
+                      ),
+                    ],
+                  ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 10),
+
+
+
+                Text.rich(
+                  TextSpan(
+                    text: 'Möchtest du das Team wechseln zu: ',
+                    style: const TextStyle(fontSize: 18, color: Colors.black),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: '${widget.teamName}', // Teamname
+                        style: const TextStyle(
+                          fontSize: 22,
+                          color: Colors.green, // hier die Farbe des Teams
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '.', // Punkt am Ende
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
                 const SizedBox(height: 40),
                 _buildJoinButton(),
               ]
-              // *** STANDARD ANZEIGE (Beitreten) ***
+              // STANDARD ANZEIGE (Beitreten)
               else ...[
                 const Icon(Icons.group_add_outlined, color: Colors.blue, size: 80),
                 const SizedBox(height: 20),
@@ -158,15 +196,13 @@ class _JoinTeamState extends State<JoinTeam> {
     );
   }
 
-  // Hilfsmethode für den Beitritt-Button (Redundanz vermeiden)
   Widget _buildJoinButton() {
     return ElevatedButton.icon(
-      onPressed: _joinTeam,
+      onPressed: _isLoading ? null : _joinTeam,
       icon: const Icon(Icons.add_task, color: Colors.white),
-      label: const Text('Jetzt beitreten', style: TextStyle(fontSize: 20)),
+      label: const Text('Jetzt beitreten', style: TextStyle(fontSize: 20, color: Colors.white)),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

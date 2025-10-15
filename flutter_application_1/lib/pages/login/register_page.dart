@@ -59,75 +59,90 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Bitte registriere dich',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 15),
-                    Text(
-                      '1. Benutzerdaten',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTextField(_usernameController, 'Benutzername', false),
-                    const SizedBox(height: 5),
-                    _buildTextField(_passwordController, 'Passwort', true),
-                    const SizedBox(height: 5),
-                    _buildTextField(_confirmPasswordController,
-                        'Passwort bestätigen', true),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _navigateToPersonalData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 90, 111, 78),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
-                      ),
-                      child: const Text(
-                        'Weiter',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pushReplacementNamed('/login');
-                        },
-                        child: Text(
-                          "Zum Login",
-                          style: TextStyle(
-                            fontSize: 16,
-                            decoration: TextDecoration.underline,
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/app_bgr.jpg',
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  color: Colors.black.withOpacity(0.4),
+                ),
+              ],
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Bitte registriere dich',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
                           ),
                         ),
-                      ),
+                        Text(
+                          '1. Benutzerdaten',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildTextField(context, _usernameController, 'Benutzername', false),
+                        const SizedBox(height: 5),
+                        _buildTextField(context, _passwordController, 'Passwort', true),
+                        const SizedBox(height: 5),
+                        _buildTextField(context, _confirmPasswordController, 'Passwort bestätigen', true),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: _navigateToPersonalData,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 90, 111, 78),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          ),
+                          child: const Text(
+                            'Weiter',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).pushReplacementNamed('/login');
+                            },
+                            child: Text(
+                              "Zum Login",
+                              style: TextStyle(
+                                fontSize: 16,
+                                decoration: TextDecoration.underline,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -155,7 +170,11 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   static Widget _buildTextField(
-      TextEditingController controller, String labelText, bool obscureText) {
+    BuildContext context, // 👈 context als Parameter hinzufügen
+    TextEditingController controller,
+    String labelText,
+    bool obscureText,
+  ) {
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -163,10 +182,13 @@ class _RegisterPageState extends State<RegisterPage> {
         labelText: labelText,
         border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Colors.grey),
+        labelStyle: TextStyle(
+          color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
+        ),
       ),
-      style: const TextStyle(color: Colors.black),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
     );
   }
 }

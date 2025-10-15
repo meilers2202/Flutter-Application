@@ -1,9 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:flutter/material.dart';
-import 'package:pewpew_connect/service/user_service.dart';
-import 'package:pewpew_connect/pages/user_pages/main_page/team_details_page.dart';
-import 'package:package_info_plus/package_info_plus.dart'; 
+import 'package:pewpew_connect/service/imports.dart';
 
 class MainPage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -30,10 +27,13 @@ class MainPage extends StatefulWidget {
   });
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<MainPage> createState() => MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+// Global RouteObserver für die App (in main.dart initialisieren)
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
+class MainPageState extends State<MainPage> with RouteAware {
   final UserService _userService = UserService();
   String? _userEmail;
   String? _userCity;
@@ -46,19 +46,41 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _initAllData();
+    _initPackageInfo();
   }
 
-    Future<void> _initAllData() async {
-    // Rufe beide asynchronen Funktionen gleichzeitig auf
-    await Future.wait([
-      _fetchProfileData(),
-      _initPackageInfo(),
-    ]);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    final modalRoute = ModalRoute.of(context);
+    if (modalRoute is PageRoute) {
+      routeObserver.subscribe(this, modalRoute);
+    }
 
-    // Stelle sicher, dass das Widget noch existiert, bevor setState aufgerufen wird
+    // Direkt beim ersten Aufbau laden
+    _refreshProfileData();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Wird aufgerufen, wenn die Route wieder angezeigt wird (z.B. nach Teamwechsel)
+  @override
+  void didPopNext() {
+    _refreshProfileData();
+  }
+
+  Future<void> _refreshProfileData() async {
     if (!mounted) return;
-
+    setState(() {
+      _isLoading = true;
+    });
+    await fetchProfileData();
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
     });
@@ -70,17 +92,8 @@ class _MainPageState extends State<MainPage> {
     _version = info.version;
   }
 
-  Future<void> _fetchProfileData() async {
-    if (widget.currentUsername == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Benutzername nicht verfügbar.')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
+  Future<void> fetchProfileData() async {
+    if (widget.currentUsername == null) return;
 
     final result = await _userService.fetchProfileData(widget.currentUsername!);
 
@@ -94,59 +107,27 @@ class _MainPageState extends State<MainPage> {
         _userTeam = userData['team'];
         _userMemberSince = userData['memberSince'];
         _userRole = userData['role'];
-        _isLoading = false;
       });
+
+      // ✅ Debug-Ausgabe
+      print('--------------MainPage DEBUG--------------');
+      print('Benutzername: ${userData['username']}');
+      print('E-Mail: ${userData['email']}');
+      print('Stadt: ${userData['city']}');
+      print('Team: ${userData['team']}');
+      print('Mitglied seit: ${userData['memberSince']}');
+      print('Teamrolle: ${userData['teamrole']}');
+      print('Rolle: ${userData['role']}');
+      print('------------------------------------------');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Fehler: ${result['message']}')),
       );
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
-  Future<void> _createTeam() async {
-    final TextEditingController teamNameController = TextEditingController();
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Neues Team erstellen'),
-          content: TextField(
-            controller: teamNameController,
-            decoration: const InputDecoration(hintText: "Teamname eingeben"),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              child: const Text('Erstellen'),
-              onPressed: () async {
-                final newTeamName = teamNameController.text.trim();
-                if (newTeamName.isNotEmpty) {
-                  final result = await _userService.createTeam(newTeamName);
-
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(result['message'])),
-                  );
-                }
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _fetchTeamMembersAndNavigate() async {
-    await(_fetchProfileData());
+    await(fetchProfileData());
     if (_userTeam == null || _userTeam!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -199,7 +180,7 @@ class _MainPageState extends State<MainPage> {
         title: const Text(
           'Airsoft App',
           style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
+            color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -215,6 +196,7 @@ class _MainPageState extends State<MainPage> {
         ),
       ),
       drawer: Drawer(
+        width: 200,
         child: Column(
           children: [
             Container(
@@ -239,13 +221,13 @@ class _MainPageState extends State<MainPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white, size: 24),
-                      padding: EdgeInsets.zero, // 👈 entfernt Standard-Padding
-                      constraints: const BoxConstraints(), // 👈 entfernt Mindestgröße
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                    Builder(
+                      builder: (context) => IconButton(
+                        icon: const Icon(Icons.close, color: Color.fromARGB(255, 255, 255, 255), size: 24),
+                        onPressed: () {
+                          Scaffold.of(context).closeDrawer();
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -289,6 +271,15 @@ class _MainPageState extends State<MainPage> {
                   Navigator.of(context).pushNamed('/admin');
                 },
               ),
+              ListTile(
+                leading: Icon(Icons.image,
+                    color: Theme.of(context).textTheme.bodyMedium?.color),
+                title: Text('ImageLoader',
+                    style: Theme.of(context).textTheme.bodyMedium),
+                onTap: () {
+                  Navigator.pushNamed(context, '/image-upload');
+                },
+              ),
             ListTile(
               leading: Icon(Icons.logout,
                   color: Theme.of(context).textTheme.bodyMedium?.color),
@@ -309,7 +300,7 @@ class _MainPageState extends State<MainPage> {
               ),
               title: Text(
                 'Version (v$_version)',
-                style: Theme.of(context).textTheme.bodyMedium, // Das "style"-Argument ist jetzt korrekt hier
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -351,10 +342,21 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _createTeam,
+                  onPressed: () async {
+                    final newTeamName = await Navigator.of(context).push<String>(
+                      MaterialPageRoute(
+                        builder: (_) => CreateTeamPage(userService: _userService),
+                      ),
+                    );
+
+                    if (newTeamName != null && newTeamName.isNotEmpty) {
+                      setState(() {
+                        _userTeam = newTeamName; // Optional: Team sofort in MainPage aktualisieren
+                      });
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
+                    backgroundColor: Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
                     minimumSize: const Size(100, 100),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -369,7 +371,13 @@ class _MainPageState extends State<MainPage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pushNamed('/allTeams');
+                    Navigator.of(context).pushNamed(
+                      '/allTeams',
+                      arguments: {
+                        'currentUsername': widget.currentUsername,
+                        'userTeam': _userTeam,
+                      },
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:

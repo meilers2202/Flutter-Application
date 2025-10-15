@@ -26,14 +26,17 @@ class _RegisterPolicyState extends State<RegisterPolicy> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
           SizedBox(height: 15),
           
           Text(
             'Mit der Registrierung bei unserer Plattform stimmen Sie den folgenden Bedingungen zu:',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+            ),
           ),
           SizedBox(height: 10),
 
@@ -44,11 +47,15 @@ class _RegisterPolicyState extends State<RegisterPolicy> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.5,
+              color: Colors.white,
             ),
           ),
           Text(
             'Die Nutzung der Plattform ist nur Personen gestattet, die das 18. Lebensjahr vollendet haben. Sie verpflichten sich, keine illegalen, beleidigenden oder irreführenden Inhalte zu veröffentlichen. Die Plattform behält sich das Recht vor, Accounts bei Verstößen ohne Vorwarnung zu sperren.',
-            style: TextStyle(fontSize: 14),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
           ),
           SizedBox(height: 15),
 
@@ -59,11 +66,15 @@ class _RegisterPolicyState extends State<RegisterPolicy> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.5,
+              color: Colors.white,
             ),
           ),
           Text(
             'Zur Durchführung der Registrierung und zur Bereitstellung unserer Dienste erheben wir folgende Daten: Benutzername, E-Mail-Adresse und gegebenenfalls weitere, von Ihnen freiwillig angegebene Informationen. Diese Daten werden ausschließlich zur Verwaltung Ihres Kontos und zur Bereitstellung der Plattformfunktionen verwendet. Wir geben Ihre Daten nicht ohne Ihre Zustimmung an Dritte weiter, es sei denn, dies ist gesetzlich vorgeschrieben.',
-            style: TextStyle(fontSize: 14),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
           ),
           SizedBox(height: 15),
 
@@ -74,17 +85,22 @@ class _RegisterPolicyState extends State<RegisterPolicy> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.5,
+              color: Colors.white,
             ),
           ),
           Text(
             'Die Plattform übernimmt keine Haftung für die Richtigkeit und Vollständigkeit der von Nutzern eingestellten Felder und Inhalte.',
-            style: TextStyle(fontSize: 14),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white,),
           ),
           SizedBox(height: 30),
           
           Text(
             'Letzte Aktualisierung: September 2025',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white,),
           ),
           SizedBox(height: 20), // Abstand zu den Buttons
         ],
@@ -97,7 +113,7 @@ class _RegisterPolicyState extends State<RegisterPolicy> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Registrierungsrichtlinien',
+          'Richtlinien',
           style: TextStyle(
             color: Color.fromARGB(255, 255, 255, 255),
             fontSize: 28,
@@ -114,62 +130,77 @@ class _RegisterPolicyState extends State<RegisterPolicy> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: _buildPolicyText(), // Text nimmt den Hauptteil ein
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/app_bgr.jpg',
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  color: Colors.black.withOpacity(0.7),
+                ),
+              ],
             ),
-            
-            // NEU: Button-Leiste am unteren Rand
-            Padding(
-              padding: const EdgeInsets.only(top: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Button 1: Ablehnen (Kehrt zurück und gibt 'false' zurück)
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Bei Ablehnung: Kehre zur vorherigen Seite zurück und gib 'false' zurück
-                        Navigator.of(context).pop(false); 
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      child: const Text(
-                        'Ablehnen',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  
-                  // Button 2: Akzeptieren (Kehrt zurück und gibt 'true' zurück)
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Bei Akzeptieren: Kehre zur vorherigen Seite zurück und gib 'true' zurück
-                        Navigator.of(context).pop(true);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 90, 111, 78),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      child: const Text(
-                        'Akzeptieren',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: _buildPolicyText(), // Text nimmt den Hauptteil ein
               ),
-            ),
-          ],
-        ),
-      ),
+              Padding(
+                padding: const EdgeInsets.only(top: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Button 1: Ablehnen (Kehrt zurück und gibt 'false' zurück)
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Bei Ablehnung: Kehre zur vorherigen Seite zurück und gib 'false' zurück
+                          Navigator.of(context).pop(false); 
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        child: const Text(
+                          'Ablehnen',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    // Button 2: Akzeptieren (Kehrt zurück und gibt 'true' zurück)
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Bei Akzeptieren: Kehre zur vorherigen Seite zurück und gib 'true' zurück
+                          Navigator.of(context).pop(true);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 90, 111, 78),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        child: const Text(
+                          'Akzeptieren',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )],
+      )
     );
   }
 }

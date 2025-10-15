@@ -18,6 +18,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? team;
   String? memberSince;
   String? teamrole;
+  String? ingamerole;
   bool _isLoading = true;
 
   @override
@@ -43,6 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
           team = data['user']['team'];
           memberSince = data['user']['memberSince'];
           teamrole = data['user']['teamrole'];
+          ingamerole = data['user']['ingamerole'];
           _isLoading = false;
         });
       } else {
@@ -124,6 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 24),
                         Card(
+                          color: Theme.of(context).scaffoldBackgroundColor,
                           elevation: 4,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           child: Padding(
@@ -136,8 +139,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                   subtitle: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Team: ${team ?? 'Kein Team'}', style: Theme.of(context).textTheme.bodyMedium),
-                                      Text('Position: ${teamrole ?? 'Kein Team'}', style: Theme.of(context).textTheme.bodyMedium),
+                                      Text(
+                                        'Team: ${team ?? 'Kein Team'}',
+                                        style: Theme.of(context).textTheme.bodyMedium
+                                      ),
+                                      Text(
+                                        'Position: ${teamrole ?? 'Nicht zugewiesen'}',
+                                        style: Theme.of(context).textTheme.bodyMedium
+                                      ),
+                                      Text(
+                                        'Rang: ${ingamerole ?? 'Nicht zugewiesen'}',
+                                        style: Theme.of(context).textTheme.bodyMedium
+                                      ),
                                     ],
                                   ),
                                 ),

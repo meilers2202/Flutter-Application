@@ -15,7 +15,6 @@ class MyHttpOverrides extends HttpOverrides {
 // ########################################### //
 
 void main() {
-
 // ########################################### //
 //               Zertifikat umgehen            //
   if (!kIsWeb) {
@@ -24,6 +23,8 @@ void main() {
 // ########################################### //
   runApp(const MyApp());
 }
+
+final GlobalKey<MainPageState> mainPageKey = GlobalKey<MainPageState>();
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -42,7 +43,7 @@ class _MyAppState extends State<MyApp> {
       _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     });
   }
-
+// Am Anfang der Datei (außerhalb aller Klassen)
   void _setUserData({
     required String username,
     String? email,
@@ -61,17 +62,21 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+  const Color appBackgroundColorLight = Color.fromARGB(255, 255, 255, 255);
+  const Color appBackgroundColorDark = Color.fromARGB(255, 30, 30, 30); // oder Colors.grey[900] als Farbe
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
         primarySwatch: Colors.green,
-        scaffoldBackgroundColor: const Color.fromARGB(255, 226, 226, 226),
+        scaffoldBackgroundColor: appBackgroundColorLight, // 👈 Variable verwenden
         drawerTheme: const DrawerThemeData(
-          backgroundColor: Color.fromARGB(255, 158, 158, 158),
+          backgroundColor: Color.fromARGB(255, 255, 255, 255),
         ),
         appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.green, // optional: grüner AppBar im Light-Modus
           iconTheme: IconThemeData(color: Colors.white),
         ),
         textTheme: const TextTheme(
@@ -84,8 +89,12 @@ class _MyAppState extends State<MyApp> {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.green,
-        scaffoldBackgroundColor: Colors.grey[900],
+        scaffoldBackgroundColor: appBackgroundColorDark, // 👈 Dunkle Variante
+        drawerTheme: const DrawerThemeData(
+          backgroundColor: Color.fromARGB(255, 40, 40, 40), // dunkler Drawer
+        ),
         appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.green,
           iconTheme: IconThemeData(color: Colors.white),
         ),
         textTheme: const TextTheme(
@@ -109,6 +118,7 @@ class _MyAppState extends State<MyApp> {
               password: '',
             ),
         '/main': (context) => MainPage(
+              key: mainPageKey,
               toggleTheme: _toggleTheme,
               userRole: _setRole,
               userTeam: _setTeam,
@@ -127,6 +137,15 @@ class _MyAppState extends State<MyApp> {
         '/admin/fields': (context) => const FieldList(),
         '/allTeams': (context) => const AllTeams(),
         '/fieldslist': (context) => const FieldListPage(),
+        '/image-upload': (context) => const ImageUploadPage(),
+        '/teamDetails': (context) {
+              final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+              return TeamDetailsPage2(
+                teamName: args['teamName'],
+                currentUsername: args['username'],
+                userCurrentTeam: args['userCurrentTeam'],
+              );
+            },
         '/fieldownerlogin': (context) => FieldOwnerLogin(
               toggleTheme: _toggleTheme,
               setUserData: _setUserData,
@@ -153,12 +172,17 @@ class _MyAppState extends State<MyApp> {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/joinTeam') {
-          final teamName = settings.arguments as String;
+          final args = settings.arguments as Map<String, dynamic>;
+          final teamName = args['teamName'] as String;
+          final currentUsername = args['currentUsername'] as String; // ✅ geändert
+          final userCurrentTeam = args['userCurrentTeam'] as String?;
+
           return MaterialPageRoute(
             builder: (context) {
               return JoinTeam(
                 teamName: teamName,
-                currentUsername: _currentUsername ?? '',
+                currentUsername: currentUsername,
+                userCurrentTeam: userCurrentTeam,
               );
             },
           );

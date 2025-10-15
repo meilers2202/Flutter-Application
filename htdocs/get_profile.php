@@ -11,11 +11,19 @@ if ($username_to_fetch === null) {
     exit;
 }
 
-$sql = "SELECT users.username, users.email, users.city, users.created_at, users.role as userRole, 
-               groups.name AS team, roles.name AS teamrole 
+$sql = "SELECT 
+            users.username, 
+            users.email, 
+            users.city, 
+            users.created_at, 
+            users.role as userRole, 
+            groups.name AS team, 
+            roles.name AS teamrole, 
+            ingameroles.name AS ingamerole,
         FROM users 
         LEFT JOIN groups ON users.group_id = groups.id 
         LEFT JOIN roles ON users.teamrole = roles.id 
+        LEFT JOIN ingameroles ON users.ingamerole_id = ingameroles.id
         WHERE users.username = :username";
 
 $stmt = $pdo->prepare($sql);
@@ -35,6 +43,7 @@ if ($user) {
             "memberSince" => $memberSince,
             "teamrole" => $user['teamrole'],
             "role" => $user['userRole']
+            "ingamerole" => $user['ingamerole'],
         ]
     ]);
 } else {

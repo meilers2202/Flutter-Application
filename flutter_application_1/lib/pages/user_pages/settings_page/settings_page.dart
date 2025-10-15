@@ -31,45 +31,49 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            title: Text(
-              'Dunkler Modus',
-              style: Theme.of(context).textTheme.bodyMedium,
+      body: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        
+        child: ListView(
+          children: [
+            ListTile(
+              title: Text(
+                'Dunkler Modus',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              leading: Icon(
+                Icons.dark_mode,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+              trailing: Switch(
+                value: Theme.of(context).brightness == Brightness.dark,
+                onChanged: (bool value) {
+                  // Diese Funktion ändert den Anzeigemodus
+                  toggleTheme();
+                },
+              ),
             ),
-            leading: Icon(
-              Icons.dark_mode,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-            ),
-            trailing: Switch(
-              value: Theme.of(context).brightness == Brightness.dark,
-              onChanged: (bool value) {
-                // Diese Funktion ändert den Anzeigemodus
-                toggleTheme();
+            const Divider(),
+            ListTile(
+              title: Text(
+                'Benachrichtigungen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              leading: Icon(
+                Icons.notifications,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Benachrichtigungseinstellungen geöffnet'),
+                  ),
+                );
               },
             ),
-          ),
-          const Divider(),
-          ListTile(
-            title: Text(
-              'Benachrichtigungen',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            leading: Icon(
-              Icons.notifications,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Benachrichtigungseinstellungen geöffnet'),
-                ),
-              );
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
