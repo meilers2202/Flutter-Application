@@ -28,12 +28,15 @@ class UserService {
   }
 
   // Erstellt ein neues Team
-  Future<Map<String, dynamic>> createTeam(String teamName) async {
+  Future<Map<String, dynamic>> createTeam(String teamName, String username) async {
     final url = Uri.parse('$ipAddress/add_team.php');
     try {
       final response = await http.post(
         url,
-        body: {'teamName': teamName},
+        body: {
+          'teamName': teamName,
+          'username': username
+        },
       );
       return json.decode(response.body);
     } catch (e) {

@@ -1,11 +1,20 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:pewpew_connect/service/imports.dart';
+import 'package:flutter/material.dart';
+
+int addincrement = 0;
+
+void incrementCounter() { 
+  addincrement++; 
+  print('Der neue Wert ist: $addincrement');
+}
 
 class MainPage extends StatefulWidget {
   final VoidCallback toggleTheme;
   final String? userRole;
   final String? userTeam;
+  final String? teamrole;
   final String? currentUsername;
 
   final Function({
@@ -22,6 +31,7 @@ class MainPage extends StatefulWidget {
     required this.toggleTheme,
     this.userRole,
     this.userTeam,
+    this.teamrole,
     required this.currentUsername,
     required this.onTeamChange,
   });
@@ -40,6 +50,7 @@ class MainPageState extends State<MainPage> with RouteAware {
   String? _userMemberSince;
   String? _userRole;
   String? _userTeam;
+  String? _teamrole;
   String _version = '';
   bool _isLoading = true;
 
@@ -58,7 +69,6 @@ class MainPageState extends State<MainPage> with RouteAware {
       routeObserver.subscribe(this, modalRoute);
     }
 
-    // Direkt beim ersten Aufbau laden
     _refreshProfileData();
   }
 
@@ -68,7 +78,6 @@ class MainPageState extends State<MainPage> with RouteAware {
     super.dispose();
   }
 
-  // Wird aufgerufen, wenn die Route wieder angezeigt wird (z.B. nach Teamwechsel)
   @override
   void didPopNext() {
     _refreshProfileData();
@@ -106,10 +115,10 @@ class MainPageState extends State<MainPage> with RouteAware {
         _userCity = userData['city'];
         _userTeam = userData['team'];
         _userMemberSince = userData['memberSince'];
+        _teamrole = userData['teamrole'] ?? 'member';
         _userRole = userData['role'];
       });
 
-      // ✅ Debug-Ausgabe
       print('--------------MainPage DEBUG--------------');
       print('Benutzername: ${userData['username']}');
       print('E-Mail: ${userData['email']}');
@@ -127,7 +136,7 @@ class MainPageState extends State<MainPage> with RouteAware {
   }
 
   Future<void> _fetchTeamMembersAndNavigate() async {
-    await(fetchProfileData());
+    await fetchProfileData();
     if (_userTeam == null || _userTeam!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,6 +163,8 @@ class MainPageState extends State<MainPage> with RouteAware {
             userCity: _userCity,
             userMemberSince: _userMemberSince,
             userRole: _userRole,
+            teamrole: _teamrole,
+            userTeam: _userTeam,
           ),
         ),
       );
@@ -223,7 +234,7 @@ class MainPageState extends State<MainPage> with RouteAware {
                     ),
                     Builder(
                       builder: (context) => IconButton(
-                        icon: const Icon(Icons.close, color: Color.fromARGB(255, 255, 255, 255), size: 24),
+                        icon: const Icon(Icons.close, color: Colors.white, size: 24),
                         onPressed: () {
                           Scaffold.of(context).closeDrawer();
                         },
@@ -269,15 +280,6 @@ class MainPageState extends State<MainPage> with RouteAware {
                     style: Theme.of(context).textTheme.bodyMedium),
                 onTap: () {
                   Navigator.of(context).pushNamed('/admin');
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.image,
-                    color: Theme.of(context).textTheme.bodyMedium?.color),
-                title: Text('ImageLoader',
-                    style: Theme.of(context).textTheme.bodyMedium),
-                onTap: () {
-                  Navigator.pushNamed(context, '/image-upload');
                 },
               ),
             ListTile(
@@ -345,13 +347,16 @@ class MainPageState extends State<MainPage> with RouteAware {
                   onPressed: () async {
                     final newTeamName = await Navigator.of(context).push<String>(
                       MaterialPageRoute(
-                        builder: (_) => CreateTeamPage(userService: _userService),
+                        builder: (_) => CreateTeamPage(
+                          userService: _userService,
+                          username: widget.currentUsername!
+                        ),
                       ),
                     );
 
                     if (newTeamName != null && newTeamName.isNotEmpty) {
                       setState(() {
-                        _userTeam = newTeamName; // Optional: Team sofort in MainPage aktualisieren
+                        _userTeam = newTeamName;
                       });
                     }
                   },

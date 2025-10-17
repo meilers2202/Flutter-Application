@@ -25,7 +25,7 @@ try {
     $groupId = $team['id'];
 
     // 2. Benutzer updaten: group_id + teamrole (z. B. 2 = Mitglied)
-    $stmt = $pdo->prepare("UPDATE users SET group_id = :groupId, teamrole = 2 WHERE username = :username");
+    $stmt = $pdo->prepare("UPDATE users SET group_id = :groupId, teamrole = 1 WHERE username = :username");
     $success = $stmt->execute([
         'groupId' => $groupId,
         'username' => $username

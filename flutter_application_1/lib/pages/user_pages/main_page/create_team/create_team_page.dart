@@ -2,8 +2,9 @@ import 'package:pewpew_connect/service/imports.dart';
 
 class CreateTeamPage extends StatefulWidget {
   final UserService userService;
+  final String username; // hier hinzufügen
 
-  const CreateTeamPage({super.key, required this.userService});
+  const CreateTeamPage({super.key, required this.userService, required this.username});
 
   @override
   State<CreateTeamPage> createState() => _CreateTeamPageState();
@@ -20,7 +21,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await widget.userService.createTeam(newTeamName);
+      final result = await widget.userService.createTeam(newTeamName, widget.username);
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(

@@ -52,4 +52,4 @@ export 'package:pewpew_connect/service/constants.dart';
 
 
 export 'package:image_picker/image_picker.dart';
-export 'package:pewpew_connect/pages/user_pages/settings_page/test.dart';
+export 'package:pewpew_connect/pages/user_pages/settings_page/change_profile_pic.dart';

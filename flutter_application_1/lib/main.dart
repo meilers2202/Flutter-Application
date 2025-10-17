@@ -137,7 +137,6 @@ class _MyAppState extends State<MyApp> {
         '/admin/fields': (context) => const FieldList(),
         '/allTeams': (context) => const AllTeams(),
         '/fieldslist': (context) => const FieldListPage(),
-        '/image-upload': (context) => const ImageUploadPage(),
         '/teamDetails': (context) {
               final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
               return TeamDetailsPage2(

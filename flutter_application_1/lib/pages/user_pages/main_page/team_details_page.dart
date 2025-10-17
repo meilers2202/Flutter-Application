@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:pewpew_connect/service/constants.dart'; 
+import 'package:pewpew_connect/service/constants.dart';
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamName;
@@ -10,6 +10,8 @@ class TeamDetailsPage extends StatefulWidget {
   final String? userEmail;
   final String? userCity;
   final String? userMemberSince;
+  final String? userTeam;
+  final String? teamrole;
   final String? userRole;
 
   final Function({
@@ -30,6 +32,8 @@ class TeamDetailsPage extends StatefulWidget {
     this.userEmail,
     this.userCity,
     this.userMemberSince,
+    this.userTeam,
+    this.teamrole,
     this.userRole,
   });
 
@@ -38,6 +42,13 @@ class TeamDetailsPage extends StatefulWidget {
 }
 
 class _TeamDetailsPageState extends State<TeamDetailsPage> {
+  late List<String> _members;
+
+  @override
+  void initState() {
+    super.initState();
+    _members = List.from(widget.members);
+  }
 
   Future<void> _leaveTeam() async {
     final url = Uri.parse('$ipAddress/leave_team.php');
@@ -72,14 +83,14 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     }
   }
 
-  // NEU: Widget zur Bestätigung des Verlassens
   void _confirmLeaveTeam() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Team verlassen?'),
-          content: Text('Sind Sie sicher, dass Sie das Team "${widget.teamName}" verlassen möchten?'),
+          content: Text(
+              'Sind Sie sicher, dass Sie das Team "${widget.teamName}" verlassen möchten?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -91,7 +102,8 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                 _leaveTeam();
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Verlassen', style: TextStyle(color: Colors.white)),
+              child: const Text('Verlassen',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -99,17 +111,128 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     );
   }
 
+  Future<void> _removeMember(String member) async {
+    final url = Uri.parse('$ipAddress/remove_member.php');
+    try {
+      final response = await http.post(url, body: {
+        'leader': widget.currentUsername,
+        'member': member,
+      });
+      final data = json.decode(response.body);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(data['message'])));
+
+      if (data['success']) {
+        setState(() {
+          _members.remove(member);
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Fehler: $e')));
+    }
+  }
+
+  Future<void> _transferLeadership(String newLeader) async {
+    final url = Uri.parse('$ipAddress/transfer_leadership.php');
+    try {
+      final response = await http.post(url, body: {
+        'leader': widget.currentUsername,
+        'newLeader': newLeader,
+      });
+      final data = json.decode(response.body);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(data['message'])));
+
+      if (data['success']) {
+        widget.onTeamChange(
+          username: widget.currentUsername,
+          team: widget.teamName,
+          email: widget.userEmail,
+          city: widget.userCity,
+          memberSince: widget.userMemberSince,
+          role: 'member',
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Fehler: $e')));
+    }
+  }
+
+  void _confirmRemoveMember(String member) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Mitglied entfernen"),
+        content: Text(
+            "Möchten Sie \"$member\" wirklich aus dem Team entfernen?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Abbrechen"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _removeMember(member);
+            },
+            child: const Text("Entfernen",
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmTransferLeadership(String member) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Teamleitung übertragen"),
+        content: Text(
+            "Möchten Sie die Teamleitung wirklich an \"$member\" übertragen?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Abbrechen"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _transferLeadership(member);
+            },
+            child:
+                const Text("Übertragen", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Ermitteln des aktuellen Benutzers für die Anzeige
     final currentUser = widget.currentUsername;
+    final isLeader = widget.teamrole?.toLowerCase() == 'leader';
+
+    // Debug (optional)
+    // print(widget.userTeam);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.teamName,
           style: const TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
+            color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -124,66 +247,72 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView( 
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Team verlassen Button (mit Bestätigungsdialog)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _confirmLeaveTeam, 
+                onPressed: _confirmLeaveTeam,
                 icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text('Team verlassen', style: TextStyle(fontSize: 16)),
+                label: const Text('Team verlassen',
+                    style: TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, 
+                  foregroundColor: Colors.white,
                   backgroundColor: Colors.red.shade700,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ),
-            
             const SizedBox(height: 30),
-
-            // 2. Mitglieder-Sektion
             const Text(
               "👥 Mitglieder des Teams:",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const Divider(height: 15, thickness: 1.5),
-            
-            // Anzeige bei keinen weiteren Mitgliedern
-            if (widget.members.length <= 1 && widget.members.contains(currentUser)) 
+            if (_members.length <= 1 && _members.contains(currentUser))
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(20.0),
                   child: Text(
                     "Sie sind das einzige Mitglied dieses Teams.",
-                    style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.grey),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey),
                   ),
                 ),
               )
             else
-              // Liste der Mitglieder (mit Cards und Icons)
-              ...widget.members.map((member) { // .toList() wurde hier entfernt
+              ..._members.map((member) {
                 final isCurrentUser = member == currentUser;
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
-                  elevation: isCurrentUser ? 4 : 2, 
-                  color: isCurrentUser ? Colors.lightBlue.shade50 : Colors.white,
+                  elevation: isCurrentUser ? 4 : 2,
+                  color:
+                      isCurrentUser ? Colors.lightBlue.shade50 : Colors.white,
                   child: ListTile(
                     leading: Icon(
-                      isCurrentUser ? Icons.person_pin : Icons.person_outline,
-                      color: isCurrentUser ? Colors.blue : Colors.black54,
+                      isCurrentUser
+                          ? Icons.person_pin
+                          : Icons.person_outline,
+                      color:
+                          isCurrentUser ? Colors.blue : Colors.black54,
                     ),
                     title: Text(
                       member,
                       style: TextStyle(
-                        fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isCurrentUser
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         fontSize: 17,
-                        color: isCurrentUser ? Colors.blue.shade900 : Colors.black87,
+                        color: isCurrentUser
+                            ? Colors.blue.shade900
+                            : Colors.black87,
                       ),
                     ),
                     trailing: isCurrentUser
@@ -195,13 +324,50 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                             ),
                             child: const Text(
                               'Sie',
-                              style: TextStyle(color: Colors.white, fontSize: 12),
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 12),
                             ),
                           )
                         : null,
                   ),
                 );
-              })
+              }),
+            if (isLeader == true) ...[
+              const SizedBox(height: 40),
+              const Text(
+                "⚙️ Teamleader Aktionen:",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              const Divider(height: 15, thickness: 1.5),
+              ..._members
+                  .where((m) => m != currentUser)
+                  .map(
+                    (member) => Card(
+                      child: ListTile(
+                        title: Text(member),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.person_remove,
+                                  color: Colors.red),
+                              tooltip: 'Mitglied entfernen',
+                              onPressed: () =>
+                                  _confirmRemoveMember(member),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.swap_horiz,
+                                  color: Colors.blue),
+                              tooltip: 'Teamleitung übertragen',
+                              onPressed: () =>
+                                  _confirmTransferLeadership(member),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+            ],
           ],
         ),
       ),
