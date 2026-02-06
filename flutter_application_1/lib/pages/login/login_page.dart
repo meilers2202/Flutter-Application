@@ -1,14 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:http/io_client.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:pewpew_connect/service/constants.dart';
-import 'package:pewpew_connect/pages/login/register_page.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 IOClient getInsecureClient() {
   if (kIsWeb) {
-    // Web unterstützt kein Umgehen von Zertifikaten, normaler Client
     return IOClient(HttpClient());
   } else {
     final ioc = HttpClient()
@@ -21,6 +15,7 @@ class WelcomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
   final Function({
     required String username,
+    required bool stayLoggedIn, // Diesen Parameter hinzufügen!
     String? email,
     String? city,
     String? team,
@@ -42,20 +37,28 @@ class _WelcomePageState extends State<WelcomePage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showDeveloperButton = false;
+  bool _stayLoggedIn = false;
+  bool _isLoading = false;
 
   Future<void> _login() async {
-    final String username = _usernameController.text;
-    final String password = _passwordController.text;
+    final String username = _usernameController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bitte fülle alle Felder aus.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
       final client = getInsecureClient();
 
       final response = await client.post(
         Uri.parse('$ipAddress/login.php'),
-        body: {
-          'username': username,
-          'password': password,
-        },
+        body: {'username': username, 'password': password},
       );
 
       if (!mounted) return;
@@ -63,28 +66,27 @@ class _WelcomePageState extends State<WelcomePage> {
       final Map<String, dynamic> data = json.decode(response.body);
 
       if (data['success'] == true) {
+        // NUR NOCH den AppState rufen, der kümmert sich um alles (Prefs + State)
         widget.setUserData(
           username: username,
+          stayLoggedIn: _stayLoggedIn,
           email: data['email'],
           city: data['city'],
           team: data['team'],
           memberSince: data['memberSince'],
           role: data['role'],
         );
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'])),
+          SnackBar(content: Text(data['message'] ?? 'Erfolgreich angemeldet')),
         );
-        Navigator.of(context).pushNamed('/main');
-        setState(() {
-          _showDeveloperButton = false;
-        });
+
+        // Wir nutzen pushNamedAndRemoveUntil, um den Stack zu leeren
+        Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'])),
+          SnackBar(content: Text(data['message'] ?? 'Login fehlgeschlagen')),
         );
-        setState(() {
-          _showDeveloperButton = false;
-        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -94,6 +96,8 @@ class _WelcomePageState extends State<WelcomePage> {
       setState(() {
         _showDeveloperButton = true;
       });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -107,51 +111,78 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(context),
+      appBar: AppBar(
+        title: const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.asset(
-                  'assets/images/app_bgr.jpg',
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/app_bgr.jpg'),
                   fit: BoxFit.cover,
                 ),
-                Container(
-                  color: Colors.black.withOpacity(0.4),
-                ),
-              ],
+              ),
+              child: Container(color: Colors.black.withOpacity(0.5)),
             ),
           ),
           Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Bitte melde dich an',
-                    style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  const Text(
+                    'Willkommen zurück',
+                    style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 15),
-                  _buildTextField(context, _usernameController, 'Benutzername', false),
-                  const SizedBox(height: 5),
-                  _buildTextField(context, _passwordController, 'Passwort', true),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 90, 111, 78),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  const SizedBox(height: 30),
+                  _buildTextField(_usernameController, 'Benutzername', false, Icons.person),
+                  const SizedBox(height: 16),
+                  _buildTextField(_passwordController, 'Passwort', true, Icons.lock),
+                  const SizedBox(height: 10),
+                  Theme(
+                    data: ThemeData(unselectedWidgetColor: Colors.white),
+                    child: CheckboxListTile(
+                      title: const Text("Angemeldet bleiben", style: TextStyle(color: Colors.white)),
+                      value: _stayLoggedIn,
+                      onChanged: (bool? value) {
+                        setState(() => _stayLoggedIn = value ?? false);
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: Colors.green,
+                      contentPadding: EdgeInsets.zero,
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Colors.green)
+                      : SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(255, 90, 111, 78),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Anmelden', style: TextStyle(color: Colors.white, fontSize: 18)),
+                          ),
+                        ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/register');
+                    },
                     child: const Text(
-                      'Anmelden',
-                      style: TextStyle(color: Colors.white),
+                      "Noch kein Konto? Jetzt registrieren",
+                      style: TextStyle(color: Colors.white70, decoration: TextDecoration.underline),
                     ),
                   ),
                   if (_showDeveloperButton)
@@ -160,7 +191,9 @@ class _WelcomePageState extends State<WelcomePage> {
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).pushNamed('/main');
+                            // Im Entwicklermodus setzen wir Gast-Daten ohne stayLoggedIn
+                            widget.setUserData(username: 'Entwickler', stayLoggedIn: false);
+                            Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
@@ -173,78 +206,35 @@ class _WelcomePageState extends State<WelcomePage> {
                         ),
                       ],
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => RegisterPage(toggleTheme: widget.toggleTheme),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "Registrieren",
-                        style: TextStyle(
-                          fontSize: 16,
-                          decoration: TextDecoration.underline,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
-
-        ]
-      )
-    );
-  }
-
-  static AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text(
-        'Airsoft App',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      centerTitle: true,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/app_bgr2.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
+        ],
       ),
     );
   }
 
-  static Widget _buildTextField(
-    BuildContext context, // 👈 context als Parameter hinzufügen
-    TextEditingController controller,
-    String labelText,
-    bool obscureText,
-  ) {
+  Widget _buildTextField(TextEditingController controller, String label, bool obscure, IconData icon) {
     return TextField(
       controller: controller,
-      obscureText: obscureText,
+      obscureText: obscure,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        labelText: labelText,
-        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon, color: Colors.white70),
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        fillColor: Colors.white.withOpacity(0.1),
         filled: true,
-        labelStyle: TextStyle(
-          color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white30),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.green),
         ),
       ),
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
     );
   }
 }

@@ -1,8 +1,5 @@
 import 'package:http/http.dart' as http;
-import 'package:pewpew_connect/service/imports.dart';
-import 'dart:async';
-
-// Annahme: ipAddress ist global definiert oder über DI bereitgestellt
+import 'package:pewpew_connect/service/imports.dart'; 
 
 class ImageUploadPage extends StatefulWidget {
   final String username;
@@ -14,184 +11,181 @@ class ImageUploadPage extends StatefulWidget {
 }
 
 class _ImageUploadPageState extends State<ImageUploadPage> {
-  XFile? _pickedImage;
-  bool _isUploading = false;
+  File? _selectedImage;
+  bool _isProcessing = false;
 
-  // 🔴 HARDCODED PFAD NUR FÜR TESTS – IMMER ENTFERNEN IN PRODUKTION!
   Future<void> _pickImage() async {
     try {
       final XFile? pickedFile = await ImagePicker().pickImage(
-        source: ImageSource.gallery, // oder ImageSource.camera
-        maxWidth: 1080,              // optional: Bildgröße begrenzen
-        maxHeight: 1080,
-        imageQuality: 85,            // Komprimierung (1–100)
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (pickedFile == null) return;
+      await _cropImage(pickedFile.path);
+    } catch (e) {
+      _showSnackBar('Fehler beim Auswählen: $e', isError: true);
+    }
+  }
+
+  Future<void> _cropImage(String path) async {
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Bild zuschneiden',
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Zuschneiden',
+            aspectRatioLockEnabled: true,
+          ),
+        ],
       );
 
-      if (pickedFile != null) {
+      if (croppedFile != null) {
         setState(() {
-          _pickedImage = pickedFile;
+          _selectedImage = File(croppedFile.path);
         });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bild ausgewählt!')),
-          );
-        }
       }
-      // Wenn der Benutzer abbricht (null), passiert nichts
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Auswählen des Bildes: $e')),
-        );
-      }
+      _showSnackBar('Fehler beim Zuschneiden: $e', isError: true);
     }
   }
 
   Future<void> _uploadImage() async {
-    if (_pickedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kein Bild ausgewählt.')),
-      );
-      return;
-    }
-
-    final file = File(_pickedImage!.path);
-    if (!await file.exists()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ausgewählte Datei existiert nicht mehr.')),
-      );
-      return;
-    }
-
-    if (file.lengthSync() > 5 * 1024 * 1024) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Datei darf max. 5 MB groß sein.')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isUploading = true;
-    });
+    if (_selectedImage == null) return;
+    setState(() => _isProcessing = true);
 
     try {
       final url = Uri.parse('$ipAddress/update_profile_pic.php');
       final request = http.MultipartRequest('POST', url);
       request.fields['username'] = widget.username;
-
-      final bytes = await file.readAsBytes();
-      final multipartFile = http.MultipartFile.fromBytes(
-        'profile_pic',
-        bytes,
-        filename: _pickedImage!.name,
+      request.files.add(
+        await http.MultipartFile.fromPath('profile_pic', _selectedImage!.path),
       );
-      request.files.add(multipartFile);
 
-      // Timeout hinzufügen (schützt vor hängenden Anfragen)
       final streamedResponse = await request.send().timeout(
         const Duration(seconds: 30),
-        onTimeout: () {
-          throw TimeoutException('Upload-Zeitüberschreitung nach 30 Sekunden.');
-        },
+        onTimeout: () => throw TimeoutException('Upload-Zeitüberschreitung'),
       );
 
       final response = await http.Response.fromStream(streamedResponse);
-
-      // Prüfe auf gültige JSON
-      Map<String, dynamic> data;
-      try {
-        data = json.decode(response.body);
-      } catch (e) {
-        throw Exception('Ungültige Serverantwort: ${response.body}');
-      }
+      final data = json.decode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Profilbild erfolgreich aktualisiert!')),
-        );
+        _showSnackBar('Profilbild erfolgreich aktualisiert!');
         if (mounted) Navigator.of(context).pop(true);
       } else {
-        final msg = data['message'] ?? 'Unbekannter Serverfehler.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Upload fehlgeschlagen: $msg')),
-        );
+        _showSnackBar('Fehler: ${data['message']}', isError: true);
       }
-
-    } on TimeoutException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('⏰ $e')),
-      );
-    } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🌐 Keine Internetverbindung.')),
-      );
-    } on http.ClientException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('📡 Netzwerkfehler: ${e.message}')),
-      );
     } catch (e) {
-      final errorMsg = e.toString().replaceAll('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('💥 Fehler: $errorMsg')),
-      );
+      _showSnackBar('Upload-Fehler: $e', isError: true);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: isError ? Colors.red : const Color.fromARGB(255, 41, 107, 43),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profilbild ändern')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_pickedImage != null)
-              SizedBox(
-                width: 250,
-                height: 250,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(_pickedImage!.path),
-                    fit: BoxFit.cover,
+      // WICHTIG: Hintergrundfarbe des Scaffolds auf transparent setzen
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Profilbild ändern', 
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          if (_selectedImage != null && !_isProcessing)
+            IconButton(
+              icon: const Icon(Icons.check, size: 32, color: Colors.white),
+              onPressed: _uploadImage,
+            ),
+        ],
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/app_bgr2.jpg'), 
+              fit: BoxFit.cover
+            ),
+          ),
+        ),
+      ),
+      // Der Container füllt den gesamten Body und setzt den Hintergrund
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/app_bgr.jpg'),
+            fit: BoxFit.cover,
+            opacity: 0.8, // Deine gewünschte Opacity
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: _isProcessing ? null : _pickImage,
+                  child: CircleAvatar(
+                    radius: 110,
+                    backgroundColor: Colors.white24,
+                    backgroundImage: _selectedImage != null 
+                        ? FileImage(_selectedImage!) 
+                        : null,
+                    child: _selectedImage == null
+                        ? const Icon(Icons.camera_alt, size: 60, color: Colors.white)
+                        : null,
                   ),
                 ),
-              )
-            else
-              const Text('Kein Bild ausgewählt'),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _pickImage,
-              icon: const Icon(Icons.image),
-              label: const Text('Testbild laden (Hardcoded)'),
+                const SizedBox(height: 50),
+                if (_isProcessing)
+                  const CircularProgressIndicator(color: Colors.white)
+                else ...[
+                  ElevatedButton.icon(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.photo_library),
+                    label: Text(_selectedImage == null ? 'Bild auswählen' : 'Bild ändern'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.8),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    ),
+                  ),
+                  if (_selectedImage != null) ...[
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Klicke auf den grünen Haken oben,\num die Änderungen zu speichern.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white, 
+                        fontStyle: FontStyle.italic,
+                        shadows: [Shadow(blurRadius: 5, color: Colors.black)],
+                      ),
+                    ),
+                  ],
+                ],
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _isUploading ? null : _uploadImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isUploading ? Colors.grey : Colors.green,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              ),
-              icon: _isUploading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(color: Colors.white),
-                    )
-                  : const Icon(Icons.cloud_upload),
-              label: Text(
-                _isUploading ? 'Lädt...' : 'Bild hochladen',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

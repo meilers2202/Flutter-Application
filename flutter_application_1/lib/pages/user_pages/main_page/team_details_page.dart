@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/imports.dart';
+import 'package:pewpew_connect/pages/user_pages/main_page/user_profile_page.dart';
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamName;
@@ -14,13 +13,15 @@ class TeamDetailsPage extends StatefulWidget {
   final String? teamrole;
   final String? userRole;
 
-  final Function({
+  final void Function({
     required String username,
-    String? team,
+    required bool stayLoggedIn, // Das hier ist der entscheidende Pin!
     String? email,
     String? city,
+    String? team,
     String? memberSince,
     String? role,
+    String? teamrole,
   }) onTeamChange;
 
   const TeamDetailsPage({
@@ -67,6 +68,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       if (data['success'] == true) {
         widget.onTeamChange(
           username: widget.currentUsername,
+          stayLoggedIn: true, // Added this required parameter
           email: widget.userEmail,
           city: widget.userCity,
           memberSince: widget.userMemberSince,
@@ -152,6 +154,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       if (data['success']) {
         widget.onTeamChange(
           username: widget.currentUsername,
+          stayLoggedIn: true, // Added this required parameter
           team: widget.teamName,
           email: widget.userEmail,
           city: widget.userCity,
@@ -173,7 +176,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       builder: (context) => AlertDialog(
         title: const Text("Mitglied entfernen"),
         content: Text(
-            "Möchten Sie \"$member\" wirklich aus dem Team entfernen?"),
+            "Möchten Sie ${member} wirklich aus dem Team entfernen?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -199,7 +202,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       builder: (context) => AlertDialog(
         title: const Text("Teamleitung übertragen"),
         content: Text(
-            "Möchten Sie die Teamleitung wirklich an \"$member\" übertragen?"),
+            "Möchten Sie die Teamleitung wirklich an ${member} übertragen?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -223,9 +226,6 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   Widget build(BuildContext context) {
     final currentUser = widget.currentUsername;
     final isLeader = widget.teamrole?.toLowerCase() == 'leader';
-
-    // Debug (optional)
-    // print(widget.userTeam);
 
     return Scaffold(
       appBar: AppBar(
@@ -254,24 +254,12 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
           children: [
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _confirmLeaveTeam,
-                icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text('Team verlassen',
-                    style: TextStyle(fontSize: 16)),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.red.shade700,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
             ),
             const SizedBox(height: 30),
             const Text(
-              "👥 Mitglieder des Teams:",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              "Mitglieder des Teams:",
+              style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const Divider(height: 15, thickness: 1.5),
             if (_members.length <= 1 && _members.contains(currentUser))
@@ -288,7 +276,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                 ),
               )
             else
-              ..._members.map((member) {
+                  ..._members.map((member) {
                 final isCurrentUser = member == currentUser;
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
@@ -296,12 +284,18 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                   color:
                       isCurrentUser ? Colors.lightBlue.shade50 : Colors.white,
                   child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => UserProfilePage(username: member)),
+                          );
+                        },
                     leading: Icon(
                       isCurrentUser
                           ? Icons.person_pin
                           : Icons.person_outline,
                       color:
-                          isCurrentUser ? Colors.blue : Colors.black54,
+                          isCurrentUser ? const Color.fromARGB(255, 41, 107, 43) : Colors.black54,
                     ),
                     title: Text(
                       member,
@@ -311,7 +305,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                             : FontWeight.normal,
                         fontSize: 17,
                         color: isCurrentUser
-                            ? Colors.blue.shade900
+                            ? Color.fromARGB(255, 41, 107, 43)
                             : Colors.black87,
                       ),
                     ),
@@ -319,7 +313,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                         ? Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: Colors.blue,
+                              color: Color.fromARGB(255, 41, 107, 43),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: const Text(
@@ -332,6 +326,24 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                   ),
                 );
               }),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: _confirmLeaveTeam,
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                  label: const Text(
+                    'Team verlassen',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color.fromARGB(255, 174, 30, 30),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
             if (isLeader == true) ...[
               const SizedBox(height: 40),
               const Text(
@@ -344,6 +356,12 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                   .map(
                     (member) => Card(
                       child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => UserProfilePage(username: member)),
+                          );
+                        },
                         title: Text(member),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,

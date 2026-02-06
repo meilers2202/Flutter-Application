@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:pewpew_connect/service/imports.dart';
+import 'package:pewpew_connect/pages/user_pages/main_page/user_profile_page.dart';
 
 class TeamMembersPage extends StatefulWidget {
   final String teamName;
@@ -83,9 +84,55 @@ class _TeamMembersPageState extends State<TeamMembersPage> {
                     return ListTile(
                       leading: const Icon(Icons.person),
                       title: Text(member),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => UserProfilePage(username: member)),
+                        );
+                      },
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle, color: Colors.red),
+                        onPressed: () => _confirmRemoveMember(member),
+                      ),
                     );
                   },
                 ),
     );
+  }
+
+  Future<void> _confirmRemoveMember(String member) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mitglied entfernen'),
+        content: Text('Möchtest du $member wirklich aus dem Team "${widget.teamName}" entfernen?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('Entfernen')),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _removeMember(member);
+    }
+  }
+
+  Future<void> _removeMember(String member) async {
+    final url = Uri.parse('$ipAddress/leave_team.php');
+    try {
+      final response = await http.post(url, body: {'username': member});
+      final data = json.decode(response.body);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? 'Keine Antwort vom Server')));
+      if (data['success'] == true) {
+        await _fetchTeamMembers();
+        // Inform caller that something changed
+        //Navigator.pop(context, 'updated');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Fehler beim Entfernen: $e')));
+    }
   }
 }

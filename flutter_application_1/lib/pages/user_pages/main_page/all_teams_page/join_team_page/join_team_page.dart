@@ -87,13 +87,12 @@ class _JoinTeamState extends State<JoinTeam> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // BEREITS MITGLIED
               if (isAlreadyMember) ...[
-                const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
+                const Icon(Icons.check_circle_outline, color: Color.fromARGB(255, 41, 107, 43), size: 80),
                 const SizedBox(height: 20),
                 Text(
                   'Glückwunsch, ${widget.currentUsername}!',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 41, 107, 43)),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
@@ -126,13 +125,13 @@ class _JoinTeamState extends State<JoinTeam> {
                 Text.rich(
                   TextSpan(
                     text: 'Du bist derzeit Mitglied in dem Team: ',
-                    style: const TextStyle(fontSize: 18, color: Colors.black),
+                    style: const TextStyle(fontSize: 18),
                     children: <TextSpan>[
                       TextSpan(
                         text: '${widget.userCurrentTeam}', // Teamname
                         style: const TextStyle(
                           fontSize: 22,
-                          color: Colors.green, // hier die Farbe des Teams
+                          color: Color.fromARGB(255, 41, 107, 43), // hier die Farbe des Teams
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -150,13 +149,13 @@ class _JoinTeamState extends State<JoinTeam> {
                 Text.rich(
                   TextSpan(
                     text: 'Möchtest du das Team wechseln zu: ',
-                    style: const TextStyle(fontSize: 18, color: Colors.black),
+                    style: const TextStyle(fontSize: 18),
                     children: <TextSpan>[
                       TextSpan(
-                        text: '${widget.teamName}', // Teamname
+                        text: widget.teamName, // Teamname
                         style: const TextStyle(
                           fontSize: 22,
-                          color: Colors.green, // hier die Farbe des Teams
+                          color: Color.fromARGB(255, 41, 107, 43), // hier die Farbe des Teams
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -173,7 +172,7 @@ class _JoinTeamState extends State<JoinTeam> {
               ]
               // STANDARD ANZEIGE (Beitreten)
               else ...[
-                const Icon(Icons.group_add_outlined, color: Colors.blue, size: 80),
+                const Icon(Icons.group_add_outlined, color: Color.fromARGB(255, 41, 107, 43), size: 80),
                 const SizedBox(height: 20),
                 Text(
                   'Tritt dem Team bei, ${widget.currentUsername}!',
@@ -202,7 +201,7 @@ class _JoinTeamState extends State<JoinTeam> {
       icon: const Icon(Icons.add_task, color: Colors.white),
       label: const Text('Jetzt beitreten', style: TextStyle(fontSize: 20, color: Colors.white)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: Color.fromARGB(255, 41, 107, 43),
         padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

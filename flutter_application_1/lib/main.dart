@@ -1,193 +1,145 @@
+import 'service/imports.dart'; 
 
-import 'service/imports.dart';
-
-// ########################################### //
-//               Zertifikat umgehen            //
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    client.badCertificateCallback =
-        (X509Certificate cert, String host, int port) => true;
+    client.badCertificateCallback = (cert, host, port) => true;
     return client;
   }
 }
-// ########################################### //
 
-void main() {
-// ########################################### //
-//               Zertifikat umgehen            //
-  if (!kIsWeb) {
-    HttpOverrides.global = MyHttpOverrides();
-  }
-// ########################################### //
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb) HttpOverrides.global = MyHttpOverrides();
+
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppState(prefs),
+      child: const MyApp(),
+    ),
+  );
 }
 
-final GlobalKey<MainPageState> mainPageKey = GlobalKey<MainPageState>();
-
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.light;
-  String? _currentUsername;
-  String? _setTeam;
-  String? _setRole;
-
-  void _toggleTheme() {
-    setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    });
-  }
-// Am Anfang der Datei (außerhalb aller Klassen)
-  void _setUserData({
-    required String username,
-    String? email,
-    String? city,
-    String? team,
-    String? memberSince,
-    String? role,
-    String? teamrole,
-  }) {
-    setState(() {
-      _currentUsername = username;
-      _setTeam = team;
-      _setRole = role;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-  const Color appBackgroundColorLight = Color.fromARGB(255, 255, 255, 255);
-  const Color appBackgroundColorDark = Color.fromARGB(255, 30, 30, 30); // oder Colors.grey[900] als Farbe
+    final appState = Provider.of<AppState>(context);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      themeMode: _themeMode,
+      themeMode: appState.themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
         primarySwatch: Colors.green,
-        scaffoldBackgroundColor: appBackgroundColorLight, // 👈 Variable verwenden
-        drawerTheme: const DrawerThemeData(
-          backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        ),
+        scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.green, // optional: grüner AppBar im Light-Modus
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black),
-          bodyMedium: TextStyle(color: Colors.black),
-          titleLarge: TextStyle(color: Colors.black),
-          titleMedium: TextStyle(color: Colors.black),
+          backgroundColor: Colors.green, 
+          iconTheme: IconThemeData(color: Colors.white)
         ),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.green,
-        scaffoldBackgroundColor: appBackgroundColorDark, // 👈 Dunkle Variante
-        drawerTheme: const DrawerThemeData(
-          backgroundColor: Color.fromARGB(255, 40, 40, 40), // dunkler Drawer
-        ),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 30, 30, 30),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.green,
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white),
-          titleLarge: TextStyle(color: Colors.white),
-          titleMedium: TextStyle(color: Colors.white),
+          backgroundColor: Colors.green, 
+          iconTheme: IconThemeData(color: Colors.white)
         ),
       ),
-      initialRoute: '/login',
+      
+      home: appState.isAutoLoggedIn 
+          ? MainPage(
+              toggleTheme: appState.toggleTheme,
+              userRole: appState.role,
+              userTeam: appState.team,
+              currentUsername: appState.username,
+              onTeamChange: appState.setUserData,
+            )
+          : WelcomePage(
+              toggleTheme: appState.toggleTheme,
+              setUserData: appState.setUserData,
+            ),
+
       routes: {
         '/login': (context) => WelcomePage(
-              toggleTheme: _toggleTheme,
-              setUserData: _setUserData,
+              toggleTheme: appState.toggleTheme,
+              setUserData: appState.setUserData,
             ),
-        '/register': (context) => RegisterPage(
-              toggleTheme: _toggleTheme,
-            ),
-        '/personalData': (context) => const PersonalDataPage(
-              username: '',
-              password: '',
-            ),
+        '/register': (context) => RegisterPage(toggleTheme: appState.toggleTheme),
         '/main': (context) => MainPage(
-              key: mainPageKey,
-              toggleTheme: _toggleTheme,
-              userRole: _setRole,
-              userTeam: _setTeam,
-              currentUsername: _currentUsername,
-              onTeamChange: _setUserData,
+              toggleTheme: appState.toggleTheme,
+              userRole: appState.role,
+              userTeam: appState.team,
+              currentUsername: appState.username,
+              onTeamChange: appState.setUserData,
             ),
-        '/profile': (context) => ProfilePage(username: _currentUsername),
-        '/settings': (context) => SettingsPage(
-              toggleTheme: _toggleTheme,
+        '/profile': (context) => ProfilePage(
+              toggleTheme: appState.toggleTheme,
+              username: appState.username,
             ),
+        '/settings': (context) => SettingsPage(toggleTheme: appState.toggleTheme),
         '/admin': (context) => const AdminPage(),
+        // Admin subpages
         '/admin/users': (context) => const UserManagementPage(),
         '/admin/fieldowners': (context) => const FieldOwnerList(),
+        '/admin/fields': (context) => const FieldList(),
         '/admin/blocklist': (context) => const BlocklistPage(),
         '/admin/teams': (context) => const TeamsManagementPage(),
-        '/admin/fields': (context) => const FieldList(),
+        // General pages
         '/allTeams': (context) => const AllTeams(),
-        '/fieldslist': (context) => const FieldListPage(),
+        '/fieldslist': (context) => const FieldList(),
         '/teamDetails': (context) {
-              final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-              return TeamDetailsPage2(
-                teamName: args['teamName'],
-                currentUsername: args['username'],
-                userCurrentTeam: args['userCurrentTeam'],
-              );
-            },
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return TeamDetailsPage2(
+            teamName: args?['teamName'] ?? '',
+            currentUsername: args?['username'] ?? args?['currentUsername'] ?? '',
+            userCurrentTeam: args?['userCurrentTeam'],
+          );
+        },
         '/fieldownerlogin': (context) => FieldOwnerLogin(
-              toggleTheme: _toggleTheme,
-              setUserData: _setUserData,
+              toggleTheme: appState.toggleTheme,
+              setUserData: appState.setUserData,
             ),
-        '/fieldownerregister': (context) => RegisterFieldOwnerPage(
-              toggleTheme: _toggleTheme,
-            ),
-        '/fieldownermain': (context) => FieldOwnerMainPage(
-              currentUsername: _currentUsername ?? '',
-            ),
-        '/fieldcreate': (context) => CreateField(
-              currentUsername: _currentUsername ?? '',
-            ),
+        '/fieldownerregister': (context) => RegisterFieldOwnerPage(toggleTheme: appState.toggleTheme),
+        '/fieldownermain': (context) => FieldOwnerMainPage(currentUsername: appState.username),
+        '/fieldcreate': (context) => CreateField(currentUsername: appState.username),
         '/fielddetails': (context) {
-          // Übergabe eines Field-Objekts via Navigator.arguments erwartet
-          final field = ModalRoute.of(context)!.settings.arguments as Field;
-          return FieldDetailsPage(field: field);
+          final field = ModalRoute.of(context)?.settings.arguments;
+          if (field is Field) return FieldDetailsPage(field: field);
+          return _errorPage("Feld-Daten fehlen");
         },
         '/editfield': (context) {
-          final fieldToEdit = ModalRoute.of(context)!.settings.arguments as Field;
-          return EditFieldPage(field: fieldToEdit);
+          final fieldToEdit = ModalRoute.of(context)?.settings.arguments;
+          if (fieldToEdit is Field) return EditFieldPage(field: fieldToEdit);
+          return _errorPage("Edit-Daten fehlen");
         },
         '/registerpolicy': (context) => const RegisterPolicy(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/joinTeam') {
-          final args = settings.arguments as Map<String, dynamic>;
-          final teamName = args['teamName'] as String;
-          final currentUsername = args['currentUsername'] as String; // ✅ geändert
-          final userCurrentTeam = args['userCurrentTeam'] as String?;
-
+          final args = settings.arguments as Map<String, dynamic>?;
           return MaterialPageRoute(
-            builder: (context) {
-              return JoinTeam(
-                teamName: teamName,
-                currentUsername: currentUsername,
-                userCurrentTeam: userCurrentTeam,
-              );
-            },
+            builder: (context) => JoinTeam(
+              teamName: args?['teamName'] ?? '',
+              currentUsername: args?['currentUsername'] ?? appState.username,
+              userCurrentTeam: args?['userCurrentTeam'],
+            ),
           );
         }
         return null;
       },
+    );
+  }
+
+  static Widget _errorPage(String message) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Fehler")),
+      body: Center(child: Text(message)),
     );
   }
 }

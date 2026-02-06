@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:pewpew_connect/service/constants.dart';
 
 class UserService {
-  // Holt Profilinformationen vom Server
   Future<Map<String, dynamic>> fetchProfileData(String username) async {
     final url = Uri.parse('$ipAddress/get_profile.php');
     try {

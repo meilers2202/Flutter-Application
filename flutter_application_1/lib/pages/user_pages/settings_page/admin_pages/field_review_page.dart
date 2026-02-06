@@ -142,12 +142,12 @@ class _FieldReviewPageState extends State<FieldReviewPage> {
               },
             ),
             ElevatedButton(
-              child: const Text('Löschen', style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop(); // Dialog schließen
                 _deleteField(); // Löschfunktion aufrufen
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Löschen', style: TextStyle(color: Colors.white)),
             ),
           ],
         );

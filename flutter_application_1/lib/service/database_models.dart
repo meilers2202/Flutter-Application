@@ -1,8 +1,3 @@
-// database_models.dart
-
-/// ----------------------------------------------------------------------
-/// MODEL: User (users Tabelle)
-/// ----------------------------------------------------------------------
 class User {
   final int id;
   final String username;
@@ -41,10 +36,6 @@ class User {
   }
 }
 
-/// ----------------------------------------------------------------------
-/// MODEL: Field (fields Tabelle)
-/// (Ich verwende hier "Field" statt "Fields", da es ein einzelnes Objekt darstellt)
-/// ----------------------------------------------------------------------
 class Field {
   final int id;
   final String fieldname;
@@ -89,9 +80,6 @@ class Field {
   }
 }
 
-/// ----------------------------------------------------------------------
-/// MODEL: Group (groups Tabelle) - Repräsentiert Teams
-/// ----------------------------------------------------------------------
 class Group {
   final int id;
   final String name;
@@ -108,10 +96,6 @@ class Group {
     );
   }
 }
-
-/// ----------------------------------------------------------------------
-/// MODEL: Checkstate (checkstate Tabelle)
-/// ----------------------------------------------------------------------
 class FieldCheckState {
   final int id;
   final String statusName;
@@ -132,9 +116,6 @@ class FieldCheckState {
   }
 }
 
-/// ----------------------------------------------------------------------
-/// MODEL: Role (roles Tabelle) - Für Teamrollen
-/// ----------------------------------------------------------------------
 class Role {
   final int id;
   final String name;
@@ -151,12 +132,6 @@ class Role {
     );
   }
 }
-
-/// ----------------------------------------------------------------------
-/// MODEL: FieldOwner (fieldowner Tabelle) - Abbildung des Field-Besitzers
-/// (Dies ist optional, da die Daten auch direkt aus der User-Tabelle gelesen werden könnten. 
-/// Es repräsentiert die spezifische Verknüpfungstabelle, falls sie zusätzliche Infos hätte.)
-/// ----------------------------------------------------------------------
 class FieldOwner {
   final int userId;
   final String name;

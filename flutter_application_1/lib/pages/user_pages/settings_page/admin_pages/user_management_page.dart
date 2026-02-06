@@ -232,7 +232,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                       leading: const Icon(Icons.person_outline, size: 24),
                       title: Text(user, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       trailing: IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        icon: const Icon(Icons.edit, color: Color.fromARGB(255, 41, 107, 43)),
                         onPressed: () => _openUserEdit(user),
                       ),
                       onTap: () => _openUserEdit(user),

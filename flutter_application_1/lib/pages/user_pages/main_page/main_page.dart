@@ -1,13 +1,11 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:pewpew_connect/service/imports.dart';
-import 'package:flutter/material.dart';
 
 int addincrement = 0;
 
-void incrementCounter() { 
-  addincrement++; 
-  print('Der neue Wert ist: $addincrement');
+void incrementCounter() {
+  addincrement++;
+  // print ist okay für Debugging, die Warnung ignorieren wir erst mal
+  debugPrint('Der neue Wert ist: $addincrement');
 }
 
 class MainPage extends StatefulWidget {
@@ -17,13 +15,16 @@ class MainPage extends StatefulWidget {
   final String? teamrole;
   final String? currentUsername;
 
-  final Function({
+  // Updated to match AppState.setUserData signature
+  final void Function({
     required String username,
+    required bool stayLoggedIn,
     String? email,
     String? city,
     String? team,
     String? memberSince,
     String? role,
+    String? teamrole,
   }) onTeamChange;
 
   const MainPage({
@@ -40,7 +41,6 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => MainPageState();
 }
 
-// Global RouteObserver für die App (in main.dart initialisieren)
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 class MainPageState extends State<MainPage> with RouteAware {
@@ -58,18 +58,16 @@ class MainPageState extends State<MainPage> with RouteAware {
   void initState() {
     super.initState();
     _initPackageInfo();
+    fetchProfileData(); 
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
     final modalRoute = ModalRoute.of(context);
     if (modalRoute is PageRoute) {
       routeObserver.subscribe(this, modalRoute);
     }
-
-    _refreshProfileData();
   }
 
   @override
@@ -80,29 +78,22 @@ class MainPageState extends State<MainPage> with RouteAware {
 
   @override
   void didPopNext() {
-    _refreshProfileData();
-  }
-
-  Future<void> _refreshProfileData() async {
-    if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-    });
-    await fetchProfileData();
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-    });
+    fetchProfileData();
   }
 
   Future<void> _initPackageInfo() async {
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
-    _version = info.version;
+    setState(() {
+      _version = info.version;
+    });
   }
 
   Future<void> fetchProfileData() async {
-    if (widget.currentUsername == null) return;
+    if (widget.currentUsername == null || widget.currentUsername == 'Gast') {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     final result = await _userService.fetchProfileData(widget.currentUsername!);
 
@@ -117,37 +108,45 @@ class MainPageState extends State<MainPage> with RouteAware {
         _userMemberSince = userData['memberSince'];
         _teamrole = userData['teamrole'] ?? 'member';
         _userRole = userData['role'];
+        _isLoading = false;
       });
-
-      print('--------------MainPage DEBUG--------------');
-      print('Benutzername: ${userData['username']}');
-      print('E-Mail: ${userData['email']}');
-      print('Stadt: ${userData['city']}');
-      print('Team: ${userData['team']}');
-      print('Mitglied seit: ${userData['memberSince']}');
-      print('Teamrolle: ${userData['teamrole']}');
-      print('Rolle: ${userData['role']}');
-      print('------------------------------------------');
     } else {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler: ${result['message']}')),
+        SnackBar(content: Text('Fehler beim Laden: ${result['message']}')),
       );
     }
   }
 
+  Future<void> _handleLogout() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ausloggen'),
+        content: const Text('Möchtest du dich wirklich ausloggen?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Ja, Ausloggen', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      Provider.of<AppState>(context, listen: false).logout();
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
+  }
+
   Future<void> _fetchTeamMembersAndNavigate() async {
-    await fetchProfileData();
     if (_userTeam == null || _userTeam!.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Du bist keinem Team zugeordnet.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Du bist keinem Team zugeordnet.')));
       return;
     }
 
     final teamData = await _userService.fetchTeamMembers(_userTeam!);
-
     if (!mounted) return;
 
     if (teamData['success'] == true) {
@@ -158,7 +157,7 @@ class MainPageState extends State<MainPage> with RouteAware {
             teamName: teamData['teamName'],
             members: members,
             currentUsername: widget.currentUsername!,
-            onTeamChange: widget.onTeamChange,
+            onTeamChange: widget.onTeamChange, // Updated to match the signature
             userEmail: _userEmail,
             userCity: _userCity,
             userMemberSince: _userMemberSince,
@@ -168,157 +167,92 @@ class MainPageState extends State<MainPage> with RouteAware {
           ),
         ),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(teamData['message'])),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.green)));
     }
 
     final bool isAdmin = _userRole == "admin";
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Airsoft App',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('Airsoft App', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/app_bgr2.jpg'),
-              fit: BoxFit.cover,
-            ),
+            image: DecorationImage(image: AssetImage('assets/images/app_bgr2.jpg'), fit: BoxFit.cover),
           ),
         ),
       ),
       drawer: Drawer(
-        width: 200,
+        width: 220,
         child: Column(
           children: [
             Container(
-              height: 69,
+              height: 100,
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/app_bgr2.jpg'),
-                  fit: BoxFit.cover,
-                ),
+                image: DecorationImage(image: AssetImage('assets/images/app_bgr2.jpg'), fit: BoxFit.cover),
               ),
               child: SafeArea(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Menü',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text('Menü', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                     Builder(
-                      builder: (context) => IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white, size: 24),
-                        onPressed: () {
-                          Scaffold.of(context).closeDrawer();
-                        },
-                      ),
+                      builder: (BuildContext context) {
+                        return IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Scaffold.of(context).closeDrawer(),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
             ),
             ListTile(
-              leading: Icon(Icons.person,
-                  color: Theme.of(context).textTheme.bodyMedium?.color),
-              title: Text('Profil',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              onTap: () {
-                Navigator.of(context).pushNamed('/profile');
-              },
+              leading: const Icon(Icons.person),
+              title: const Text('Profil'),
+              onTap: () => Navigator.of(context).pushNamed('/profile'),
             ),
             ListTile(
-              leading: Icon(Icons.area_chart_outlined,
-                  color: Theme.of(context).textTheme.bodyMedium?.color),
-              title: Text('Field-Owner',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              onTap: () {
-                Navigator.of(context).pushNamed('/fieldownerlogin');
-              },
+              leading: const Icon(Icons.area_chart_outlined),
+              title: const Text('Field-Owner'),
+              onTap: () => Navigator.of(context).pushNamed('/fieldownerlogin'),
             ),
             ListTile(
-              leading: Icon(Icons.settings,
-                  color: Theme.of(context).textTheme.bodyMedium?.color),
-              title: Text('Einstellungen',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              onTap: () {
-                Navigator.of(context).pushNamed('/settings');
-              },
+              leading: const Icon(Icons.settings),
+              title: const Text('Einstellungen'),
+              onTap: () => Navigator.of(context).pushNamed('/settings'),
             ),
             const Divider(),
             if (isAdmin)
               ListTile(
-                leading: Icon(Icons.admin_panel_settings,
-                    color: Theme.of(context).textTheme.bodyMedium?.color),
-                title: Text('Admin-Bereich',
-                    style: Theme.of(context).textTheme.bodyMedium),
-                onTap: () {
-                  Navigator.of(context).pushNamed('/admin');
-                },
+                leading: const Icon(Icons.admin_panel_settings, color: Colors.red),
+                title: const Text('Admin-Bereich'),
+                onTap: () => Navigator.of(context).pushNamed('/admin'),
               ),
             ListTile(
-              leading: Icon(Icons.logout,
-                  color: Theme.of(context).textTheme.bodyMedium?.color),
-              title: Text('Ausloggen',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              onTap: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/login',
-                  (Route<dynamic> route) => false,
-                );
-              },
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Ausloggen'),
+              onTap: _handleLogout,
             ),
             const Spacer(),
-            ListTile(
-              leading: Icon(
-                Icons.build_circle_outlined,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
-              title: Text(
-                'Version (v$_version)',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Version v$_version', style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ),
           ],
         ),
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Opacity(
-              opacity: 1,
-              child: Image.asset(
-                'assets/images/app_bgr.jpg',
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          Positioned.fill(child: Image.asset('assets/images/app_bgr.jpg', fit: BoxFit.cover)),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: GridView.count(
@@ -326,103 +260,32 @@ class MainPageState extends State<MainPage> with RouteAware {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                ElevatedButton(
-                  onPressed: _fetchTeamMembersAndNavigate,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
-                    minimumSize: const Size(100, 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Icon(
-                    Icons.group,
-                    color: Colors.white,
-                    size: 50,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final newTeamName = await Navigator.of(context).push<String>(
-                      MaterialPageRoute(
-                        builder: (_) => CreateTeamPage(
-                          userService: _userService,
-                          username: widget.currentUsername!
-                        ),
-                      ),
-                    );
-
-                    if (newTeamName != null && newTeamName.isNotEmpty) {
-                      setState(() {
-                        _userTeam = newTeamName;
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
-                    minimumSize: const Size(100, 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Icon(
-                    Icons.group_add,
-                    color: Colors.white,
-                    size: 50,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(
-                      '/allTeams',
-                      arguments: {
-                        'currentUsername': widget.currentUsername,
-                        'userTeam': _userTeam,
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
-                    minimumSize: const Size(100, 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Icon(
-                    Icons.list,
-                    color: Colors.white,
-                    size: 50,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/fieldslist');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color.fromARGB((255 * 0.3).round(), 55, 99, 5),
-                    minimumSize: const Size(100, 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Icon(
-                    Icons.area_chart_outlined,
-                    color: Colors.white,
-                    size: 50,
-                  ),
-                ),
+                _buildMenuButton(Icons.group, _fetchTeamMembersAndNavigate),
+                _buildMenuButton(Icons.group_add, () async {
+                  final newTeam = await Navigator.of(context).push<String>(
+                    MaterialPageRoute(builder: (_) => CreateTeamPage(userService: _userService, username: widget.currentUsername!)),
+                  );
+                  if (newTeam != null) fetchProfileData();
+                }),
+                _buildMenuButton(Icons.list, () => Navigator.of(context).pushNamed('/allTeams', arguments: {'currentUsername': widget.currentUsername, 'userTeam': _userTeam})),
+                _buildMenuButton(Icons.area_chart_outlined, () => Navigator.of(context).pushNamed('/fieldslist')),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMenuButton(IconData icon, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        // KORREKTUR: .withValues() statt .withOpacity() wegen Deprecation
+        backgroundColor: Colors.green.withValues(alpha: 0.3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Icon(icon, color: Colors.white, size: 50),
     );
   }
 }

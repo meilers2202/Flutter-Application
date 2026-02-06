@@ -158,7 +158,7 @@ class _BlocklistPageState extends State<BlocklistPage> {
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           trailing: IconButton( 
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon: const Icon(Icons.edit, color: Color.fromARGB(255, 41, 107, 43)),
                                 onPressed: () => _openUnblockDialog(username),
                             ),
                             onTap: () => _openUnblockDialog(username),

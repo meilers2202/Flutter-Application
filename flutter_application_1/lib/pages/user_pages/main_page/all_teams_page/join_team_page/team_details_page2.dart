@@ -106,7 +106,6 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
                               textAlign: TextAlign.center, // 🔥 sorgt für horizontales Zentrieren
                               style: TextStyle(
                                 fontSize: 20,
-                                color: Colors.black54,
                               ),
                             ),
                             const SizedBox(height: 30),
@@ -140,7 +139,7 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isAlreadyMember
                                     ? Colors.grey
-                                    : Colors.blue.shade700,
+                                    : Color.fromARGB(255, 41, 107, 43),
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 40, vertical: 15),
                                 shape: RoundedRectangleBorder(
@@ -176,7 +175,7 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
                                     const EdgeInsets.symmetric(vertical: 6),
                                 child: ListTile(
                                   leading: const Icon(Icons.person,
-                                      color: Colors.blueAccent),
+                                      color: Color.fromARGB(255, 41, 107, 43)),
                                   title: Text(member),
                                 ),
                               );
@@ -212,7 +211,7 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: isAlreadyMember
                                   ? Colors.grey
-                                  : Colors.blue.shade700,
+                                  : Color.fromARGB(255, 41, 107, 43),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 40, vertical: 15),
                               shape: RoundedRectangleBorder(

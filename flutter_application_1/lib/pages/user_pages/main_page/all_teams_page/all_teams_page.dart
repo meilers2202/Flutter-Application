@@ -130,7 +130,7 @@ class _AllTeamsState extends State<AllTeams> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 64, 83, 255),
+                              color: const Color.fromARGB(255, 41, 107, 43),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(Icons.group, color: Colors.white, size: 28),

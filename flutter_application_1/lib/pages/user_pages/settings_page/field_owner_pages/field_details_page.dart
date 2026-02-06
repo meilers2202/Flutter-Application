@@ -72,12 +72,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               },
             ),
             ElevatedButton(
-              child: const Text('Löschen', style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop(); 
                 _deleteField(); 
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Löschen', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -102,14 +102,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
           children: [
             Row(
               children: [
-                Icon(icon, color: Colors.blueAccent, size: 24),
+                Icon(icon, color: Color.fromARGB(255, 41, 107, 43), size: 24),
                 const SizedBox(width: 8),
                 Text(
                   title,
                   style: const TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
                   ),
                 ),
               ],
@@ -121,7 +119,6 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               style: TextStyle(
                 fontSize: isAddress ? 16 : 14,
                 height: 1.5,
-                fontStyle: isAddress ? FontStyle.italic : null,
               ),
             ),
           ],
@@ -161,7 +158,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             // NEU: Firmenname als hervorgehobener Titel
             Text(
               widget.field.company,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.blueAccent),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 15),
             
@@ -204,9 +201,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                 icon: const Icon(Icons.edit, color: Colors.white),
                 label: const Text('Feld bearbeiten'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 3, 80, 245), // Farbe geändert
+                  backgroundColor: const Color.fromARGB(255, 41, 107, 43),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14), // Padding erhöht
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
@@ -222,7 +219,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                 icon: const Icon(Icons.delete_forever, color: Colors.white),
                 label: const Text('Feld entfernen'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: const Color.fromARGB(255, 209, 56, 45),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14), // Padding erhöht
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
