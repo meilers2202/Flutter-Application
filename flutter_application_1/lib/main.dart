@@ -1,4 +1,13 @@
-import 'service/imports.dart'; 
+import 'service/imports.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:pewpew_connect/service/notification_service.dart';
+import 'package:pewpew_connect/service/navigation_service.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -12,6 +21,10 @@ class MyHttpOverrides extends HttpOverrides {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb) HttpOverrides.global = MyHttpOverrides();
+
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  await NotificationService.instance.initialize();
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -32,6 +45,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: NavigationService.navigatorKey,
       themeMode: appState.themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
@@ -92,7 +106,7 @@ class MyApp extends StatelessWidget {
         '/admin/teams': (context) => const TeamsManagementPage(),
         // General pages
         '/allTeams': (context) => const AllTeams(),
-        '/fieldslist': (context) => const FieldList(),
+        '/fieldslist': (context) => const FieldListPage(),
         '/teamDetails': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return TeamDetailsPage2(

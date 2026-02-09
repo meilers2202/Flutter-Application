@@ -25,6 +25,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
   late TextEditingController _rulesController;
   late TextEditingController _streetController;
   late TextEditingController _housenumberController;
+  late TextEditingController _postalcodeController;
   late TextEditingController _cityController;
   late TextEditingController _companyController;
 
@@ -37,6 +38,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
     _rulesController = TextEditingController(text: widget.field.rules);
     _streetController = TextEditingController(text: widget.field.street);
     _housenumberController = TextEditingController(text: widget.field.housenumber);
+    _postalcodeController = TextEditingController(text: widget.field.postalcode);
     _cityController = TextEditingController(text: widget.field.city);
     _companyController = TextEditingController(text: widget.field.company);
   }
@@ -48,6 +50,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
     _rulesController.dispose();
     _streetController.dispose();
     _housenumberController.dispose();
+    _postalcodeController.dispose();
     _cityController.dispose();
     _companyController.dispose();
     super.dispose();
@@ -70,6 +73,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
           'rules': _rulesController.text,
           'street': _streetController.text,
           'housenumber': _housenumberController.text,
+          'postalcode': _postalcodeController.text,
           'city': _cityController.text,
           'company': _companyController.text,
         },
@@ -134,6 +138,7 @@ class _EditFieldPageState extends State<EditFieldPage> {
               const Divider(height: 30),
               _buildTextField(_streetController, 'Straße', isMultiLine: false),
               _buildTextField(_housenumberController, 'Hausnummer', isMultiLine: false),
+              _buildTextField(_postalcodeController, 'PLZ', isMultiLine: false),
               _buildTextField(_cityController, 'Stadt', isMultiLine: false),
               const SizedBox(height: 20),
               

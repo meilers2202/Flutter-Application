@@ -73,7 +73,59 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
               ], isTextContent: true),
             
             const SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _openRouteMap,
+                icon: const Icon(Icons.directions),
+                label: const Text('Route starten'),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  String _buildFieldAddress(Fields2 field) {
+    final parts = <String>[];
+    if (field.street != null && field.street!.trim().isNotEmpty) {
+      final hn = field.housenumber?.trim() ?? '';
+      final streetLine = '${field.street!.trim()} ${hn.trim()}'.trim();
+      if (streetLine.isNotEmpty) parts.add(streetLine);
+    }
+    final postalRaw = field.postalcode?.trim() ?? '';
+    final postalDigits = postalRaw.replaceAll(RegExp(r'\D'), '');
+    final postal = RegExp(r'^\d{4,6}$').hasMatch(postalDigits) ? postalDigits : '';
+    final cityLine = '$postal ${field.city?.trim() ?? ''}'.trim();
+    if (cityLine.isNotEmpty) parts.add(cityLine);
+
+    if (parts.isEmpty && field.city != null && field.city!.trim().isNotEmpty) {
+      parts.add(field.city!.trim());
+    }
+    return parts.join(', ');
+  }
+
+  void _openRouteMap() {
+    final address = _buildFieldAddress(_currentField);
+    debugPrint(
+      'Route debug | fieldId=${_currentField.id} | name=${_currentField.fieldname} | '
+      'company=${_currentField.company ?? ''} | street=${_currentField.street ?? ''} | '
+      'housenumber=${_currentField.housenumber ?? ''} | postalcode=${_currentField.postalcode ?? ''} | '
+      'city=${_currentField.city ?? ''} | fullAddress=$address',
+    );
+    if (address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Keine Adresse vorhanden.')),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FieldMapPage(
+          destinationName: _currentField.fieldname,
+          destinationAddress: address,
         ),
       ),
     );

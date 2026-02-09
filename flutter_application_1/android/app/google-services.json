@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "78186512037",
+    "project_id": "pewpew-connect-21131",
+    "storage_bucket": "pewpew-connect-21131.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:78186512037:android:2c193cc34087f10117574c",
+        "android_client_info": {
+          "package_name": "com.pewpew.connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAerz8eaPXOQPw60f4CY1TB1hbudItYjX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

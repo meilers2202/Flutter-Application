@@ -21,6 +21,7 @@ class WelcomePage extends StatefulWidget {
     String? team,
     String? memberSince,
     String? role,
+    bool forcePasswordChange,
   }) setUserData;
 
   const WelcomePage({
@@ -67,6 +68,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
       if (data['success'] == true) {
         // NUR NOCH den AppState rufen, der kümmert sich um alles (Prefs + State)
+        final bool forcePW = data['force_password_change'] == true;
         widget.setUserData(
           username: username,
           stayLoggedIn: _stayLoggedIn,
@@ -75,6 +77,7 @@ class _WelcomePageState extends State<WelcomePage> {
           team: data['team'],
           memberSince: data['memberSince'],
           role: data['role'],
+          forcePasswordChange: forcePW,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,6 +86,25 @@ class _WelcomePageState extends State<WelcomePage> {
 
         // Wir nutzen pushNamedAndRemoveUntil, um den Stack zu leeren
         Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
+        if (forcePW) {
+          // small delay to let main build
+          Future.delayed(Duration(milliseconds: 300), () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Passwort ändern'),
+                content: const Text('Du musst bei der nächsten Anmeldung dein Passwort ändern. Möchtest du jetzt dein Passwort ändern?'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Später')),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).pushNamed('/profile');
+                  }, child: const Text('Jetzt ändern')),
+                ],
+              ),
+            );
+          });
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? 'Login fehlgeschlagen')),

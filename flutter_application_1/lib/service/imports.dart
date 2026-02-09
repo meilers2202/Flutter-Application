@@ -23,8 +23,10 @@ export 'package:pewpew_connect/pages/user_pages/main_page/user_profile_page.dart
 export 'package:pewpew_connect/pages/user_pages/main_page/team_details_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/settings_page.dart';
 export 'package:pewpew_connect/pages/user_pages/main_page/field_review_page2.dart';
+export 'package:pewpew_connect/pages/user_pages/main_page/field_map_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_login.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/change_profile_pic.dart';
+export 'package:pewpew_connect/pages/user_pages/settings_page/change_password_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_register.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_page.dart';
 export 'package:pewpew_connect/pages/user_pages/main_page/create_team/create_team_page.dart';

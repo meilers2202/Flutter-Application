@@ -59,6 +59,25 @@ class MainPageState extends State<MainPage> with RouteAware {
     super.initState();
     _initPackageInfo();
     fetchProfileData(); 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = Provider.of<AppState>(context, listen: false);
+      if (appState.forcePasswordChange) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Passwortwechsel erforderlich'),
+            content: const Text('Du wirst beim nächsten Login aufgefordert, dein Passwort zu ändern.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Später')),
+              ElevatedButton(onPressed: () {
+                Navigator.pop(context);
+                Navigator.of(context).pushNamed('/profile');
+              }, child: const Text('Jetzt ändern')),
+            ],
+          ),
+        );
+      }
+    });
   }
 
   @override
@@ -269,12 +288,24 @@ class MainPageState extends State<MainPage> with RouteAware {
                 }),
                 _buildMenuButton(Icons.list, () => Navigator.of(context).pushNamed('/allTeams', arguments: {'currentUsername': widget.currentUsername, 'userTeam': _userTeam})),
                 _buildMenuButton(Icons.area_chart_outlined, () => Navigator.of(context).pushNamed('/fieldslist')),
+                _buildMenuButton(Icons.gps_fixed, _handleGps),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _handleGps() async {
+    final updatedCity = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => FieldMapPage(currentUsername: widget.currentUsername),
+      ),
+    );
+    if (updatedCity != null && mounted) {
+      setState(() => _userCity = updatedCity);
+    }
   }
 
   Widget _buildMenuButton(IconData icon, VoidCallback onPressed) {

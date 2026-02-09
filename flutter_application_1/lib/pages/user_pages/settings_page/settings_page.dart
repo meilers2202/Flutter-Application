@@ -1,13 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:pewpew_connect/service/notification_service.dart';
 
-// SettingsPage ist jetzt ein StatelessWidget, da die Zustandsverwaltung von MyApp übernommen wird
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   final VoidCallback toggleTheme;
 
   const SettingsPage({
     super.key,
     required this.toggleTheme,
   });
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool _notificationsEnabled = false;
+  bool _loadingNotifications = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationState();
+  }
+
+  Future<void> _loadNotificationState() async {
+    final enabled = await NotificationService.instance.isEnabled();
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = enabled;
+      _loadingNotifications = false;
+    });
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    setState(() => _loadingNotifications = true);
+    final enabled = await NotificationService.instance.setEnabled(value);
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = enabled;
+      _loadingNotifications = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? 'Benachrichtigungen aktiviert.'
+              : 'Benachrichtigungen deaktiviert oder blockiert.',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,28 +92,22 @@ class SettingsPage extends StatelessWidget {
                 value: Theme.of(context).brightness == Brightness.dark,
                 onChanged: (bool value) {
                   // Diese Funktion ändert den Anzeigemodus
-                  toggleTheme();
+                  widget.toggleTheme();
                 },
               ),
             ),
             const Divider(),
-            ListTile(
+            SwitchListTile(
               title: Text(
                 'Benachrichtigungen',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              leading: Icon(
+              secondary: Icon(
                 Icons.notifications,
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Benachrichtigungseinstellungen geöffnet'),
-                  ),
-                );
-              },
+              value: _notificationsEnabled,
+              onChanged: _loadingNotifications ? null : _toggleNotifications,
             ),
           ],
         ),

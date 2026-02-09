@@ -29,6 +29,7 @@ $sql = "SELECT
             groups.name AS team, 
             roles.name AS teamrole, 
             ingameroles.name AS ingamerole,
+                users.ingamerole_id,
             users.profile_image_url 
         FROM users 
         LEFT JOIN groups ON users.group_id = groups.id 

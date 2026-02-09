@@ -13,6 +13,7 @@ $description = $_POST['description'] ?? null;
 $rules = $_POST['rules'] ?? null;
 $street = $_POST['street'] ?? null;
 $housenumber = $_POST['housenumber'] ?? null;
+$postalcode = $_POST['postalcode'] ?? null;
 $city = $_POST['city'] ?? null;
 $company = $_POST['company'] ?? null;
 
@@ -21,7 +22,7 @@ if (!$id || !$fieldname) {
     exit();
 }
 
-$sql = "UPDATE fields SET fieldname = :fieldname, description = :description, rules = :rules, street = :street, housenumber = :housenumber, city = :city, company = :company WHERE id = :id";
+$sql = "UPDATE fields SET fieldname = :fieldname, description = :description, rules = :rules, street = :street, housenumber = :housenumber, postalcode = :postalcode, city = :city, company = :company WHERE id = :id";
 
 $stmt = $pdo->prepare($sql);
 
@@ -31,6 +32,7 @@ $params = [
     ':rules' => $rules,
     ':street' => $street,
     ':housenumber' => $housenumber,
+    ':postalcode' => $postalcode,
     ':city' => $city,
     ':company' => $company,
     ':id' => $id,
