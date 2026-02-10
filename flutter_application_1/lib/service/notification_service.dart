@@ -1,14 +1,5 @@
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
-import 'package:pewpew_connect/pages/user_pages/main_page/field_page2.dart';
-import 'package:pewpew_connect/pages/user_pages/main_page/field_review_page2.dart';
-import 'package:pewpew_connect/service/constants.dart';
-import 'package:pewpew_connect/service/navigation_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class NotificationService {
   NotificationService._();

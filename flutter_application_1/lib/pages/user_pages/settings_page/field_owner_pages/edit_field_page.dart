@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'field_owner_main.dart'; // Pfad ggf. anpassen
-import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class EditFieldPage extends StatefulWidget {
   final Field field;

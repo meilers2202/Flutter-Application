@@ -1,9 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:pewpew_connect/service/analytics_service.dart';
-import 'package:pewpew_connect/service/consent_service.dart';
-import 'package:pewpew_connect/service/notification_service.dart';
-import 'package:pewpew_connect/service/performance_service.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback toggleTheme;

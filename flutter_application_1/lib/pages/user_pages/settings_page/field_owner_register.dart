@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Hinzugefügt
-import 'dart:convert'; // Hinzugefügt
-import 'package:pewpew_connect/service/constants.dart'; // Hinzugefügt (für ipAddress)
-
+import 'package:pewpew_connect/service/imports.dart';
 
 class RegisterFieldOwnerPage extends StatefulWidget {
   final VoidCallback toggleTheme;

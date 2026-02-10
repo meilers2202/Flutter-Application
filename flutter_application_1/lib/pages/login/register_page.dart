@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:pewpew_connect/pages/login/register_personaldata_page.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class RegisterPage extends StatefulWidget {
   final VoidCallback toggleTheme;

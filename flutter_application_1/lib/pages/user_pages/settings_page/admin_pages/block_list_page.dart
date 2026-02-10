@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:pewpew_connect/service/constants.dart'; // <- für ipAddress
+import 'package:pewpew_connect/service/imports.dart';
 
 class BlocklistPage extends StatefulWidget {
   const BlocklistPage({super.key});

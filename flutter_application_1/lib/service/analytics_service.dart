@@ -1,5 +1,4 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:pewpew_connect/service/consent_service.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class AnalyticsService {
   AnalyticsService._();

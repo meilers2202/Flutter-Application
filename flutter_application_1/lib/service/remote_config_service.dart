@@ -1,4 +1,4 @@
-import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class RemoteConfigService {
   RemoteConfigService._();

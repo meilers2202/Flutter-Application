@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:pewpew_connect/service/analytics_service.dart';
-import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class TeamDetailsPage2 extends StatefulWidget {
   final String teamName;

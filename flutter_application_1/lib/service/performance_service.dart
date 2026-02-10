@@ -1,5 +1,4 @@
-import 'package:firebase_performance/firebase_performance.dart';
-import 'package:pewpew_connect/service/consent_service.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class PerformanceService {
   PerformanceService._();

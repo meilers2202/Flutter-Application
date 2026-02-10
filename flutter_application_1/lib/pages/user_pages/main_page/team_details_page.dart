@@ -1,6 +1,5 @@
 import 'package:http/http.dart' as http;
 import 'package:pewpew_connect/service/imports.dart';
-import 'package:pewpew_connect/service/analytics_service.dart';
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamName;

@@ -1,7 +1,5 @@
 import 'package:http/io_client.dart';
 import 'package:pewpew_connect/service/imports.dart';
-import 'package:pewpew_connect/service/analytics_service.dart';
-import 'package:pewpew_connect/service/performance_service.dart';
 
 IOClient getInsecureClient() {
   if (kIsWeb) {

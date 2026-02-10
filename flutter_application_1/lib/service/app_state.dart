@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class AppState extends ChangeNotifier {
   final SharedPreferences prefs;

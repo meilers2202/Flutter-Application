@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/imports.dart';
 
 class Field {
   final int id;
