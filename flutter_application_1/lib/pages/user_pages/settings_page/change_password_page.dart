@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:pewpew_connect/service/imports.dart';
 
@@ -53,6 +52,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           'new_password': nw,
         },
       );
+      if (!mounted) return;
       final data = json.decode(response.body) as Map<String, dynamic>;
       if (data['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? 'Passwort geändert')));
@@ -63,6 +63,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'] ?? 'Fehler')));
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Verbindungsfehler: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);

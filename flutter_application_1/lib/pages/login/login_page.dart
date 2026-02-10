@@ -1,5 +1,7 @@
 import 'package:http/io_client.dart';
 import 'package:pewpew_connect/service/imports.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
+import 'package:pewpew_connect/service/performance_service.dart';
 
 IOClient getInsecureClient() {
   if (kIsWeb) {
@@ -54,6 +56,8 @@ class _WelcomePageState extends State<WelcomePage> {
 
     setState(() => _isLoading = true);
 
+    final trace = await PerformanceService.instance.startTrace('login_request');
+
     try {
       final client = getInsecureClient();
 
@@ -67,6 +71,7 @@ class _WelcomePageState extends State<WelcomePage> {
       final Map<String, dynamic> data = json.decode(response.body);
 
       if (data['success'] == true) {
+        AnalyticsService.instance.logEvent('login_success');
         // NUR NOCH den AppState rufen, der kümmert sich um alles (Prefs + State)
         final bool forcePW = data['force_password_change'] == true;
         widget.setUserData(
@@ -88,7 +93,8 @@ class _WelcomePageState extends State<WelcomePage> {
         Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
         if (forcePW) {
           // small delay to let main build
-          Future.delayed(Duration(milliseconds: 300), () {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (!mounted) return;
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
@@ -106,11 +112,13 @@ class _WelcomePageState extends State<WelcomePage> {
           });
         }
       } else {
+        AnalyticsService.instance.logEvent('login_failed');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? 'Login fehlgeschlagen')),
         );
       }
     } catch (e) {
+      AnalyticsService.instance.logEvent('login_failed');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Verbindungsfehler: $e')),
@@ -119,6 +127,7 @@ class _WelcomePageState extends State<WelcomePage> {
         _showDeveloperButton = true;
       });
     } finally {
+      await PerformanceService.instance.stopTrace(trace);
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -151,7 +160,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   fit: BoxFit.cover,
                 ),
               ),
-              child: Container(color: Colors.black.withOpacity(0.5)),
+              child: Container(color: Colors.black.withValues(alpha: 0.5)),
             ),
           ),
           Center(
@@ -246,7 +255,7 @@ class _WelcomePageState extends State<WelcomePage> {
         prefixIcon: Icon(icon, color: Colors.white70),
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         filled: true,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

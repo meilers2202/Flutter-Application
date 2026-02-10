@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pewpew_connect/service/imports.dart';
 
@@ -328,7 +326,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _showEditEmailDialog() async {
     if (widget.username == null) return;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     String? newEmail;
     String? currentPassword;
 
@@ -337,7 +335,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (ctx) => AlertDialog(
         title: const Text('E-Mail ändern'),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -366,13 +364,13 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
           ElevatedButton(
             onPressed: () async {
-              if (_formKey.currentState?.validate() ?? false) {
-                _formKey.currentState?.save();
+              if (formKey.currentState?.validate() ?? false) {
+                formKey.currentState?.save();
                 Navigator.pop(ctx, true);
               }
             },
-            child: const Text('Speichern'),
             style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
+            child: const Text('Speichern'),
           ),
         ],
       ),
@@ -433,8 +431,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pop(ctx, true);
               }
             },
-            child: const Text('Speichern'),
             style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
+            child: const Text('Speichern'),
           ),
         ],
       ),
@@ -510,7 +508,7 @@ class _ProfilePageState extends State<ProfilePage> {
         content: StatefulBuilder(
           builder: (context, setState) {
             return DropdownButtonFormField<int>(
-              value: selected,
+              initialValue: selected,
               items: _availableRoles
                   .map((r) => DropdownMenuItem<int>(value: r['id'] is int ? r['id'] : int.parse(r['id'].toString()), child: Text(r['name'])))
                   .toList(),

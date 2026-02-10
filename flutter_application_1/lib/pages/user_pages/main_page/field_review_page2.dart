@@ -1,4 +1,6 @@
 import 'package:pewpew_connect/service/imports.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
+import 'package:pewpew_connect/service/remote_config_service.dart';
 
 
 class FieldReviewPage2 extends StatefulWidget {
@@ -73,14 +75,15 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
               ], isTextContent: true),
             
             const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _openRouteMap,
-                icon: const Icon(Icons.directions),
-                label: const Text('Route starten'),
+            if (RemoteConfigService.instance.showMapButton)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _openRouteMap,
+                  icon: const Icon(Icons.directions),
+                  label: const Text('Route starten'),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -107,6 +110,10 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
   }
 
   void _openRouteMap() {
+    AnalyticsService.instance.logEvent('map_opened', parameters: {
+      'field_id': _currentField.id,
+      'field_name': _currentField.fieldname,
+    });
     final address = _buildFieldAddress(_currentField);
     debugPrint(
       'Route debug | fieldId=${_currentField.id} | name=${_currentField.fieldname} | '

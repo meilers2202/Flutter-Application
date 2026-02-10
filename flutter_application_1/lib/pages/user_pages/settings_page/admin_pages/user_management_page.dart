@@ -179,6 +179,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                           ),
                         );
                         if (confirmed == true) {
+                          if (!context.mounted) return;
                           Navigator.pop(context);
                           await _requirePasswordChange(username);
                         }
@@ -282,7 +283,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Benutzer blockieren'),
-        content: Text('Soll Benutzer "${username}" wirklich blockiert werden?'),
+        content: Text('Soll Benutzer "$username" wirklich blockiert werden?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
           ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Blockieren')),
@@ -299,7 +300,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Benutzer löschen'),
-        content: Text('Soll Benutzer "${username}" wirklich gelöscht werden? Diese Aktion kann nicht rückgängig gemacht werden.'),
+        content: Text('Soll Benutzer "$username" wirklich gelöscht werden? Diese Aktion kann nicht rückgängig gemacht werden.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Abbrechen')),
           ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Löschen')),
@@ -358,7 +359,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                         ],
                       ),
                     )
-                  : _filteredUsers.isEmpty
+                    : _filteredUsers.isEmpty
                       ? Center(child: Text('Keine Benutzer zu "${_searchController.text}" gefunden.', style: const TextStyle(color: Colors.grey)))
                       : ListView.builder(
                           padding: const EdgeInsets.all(8.0),
@@ -378,9 +379,13 @@ class _UserManagementPageState extends State<UserManagementPage> {
                                 subtitle: const Text('Tippe zum Bearbeiten', style: TextStyle(fontSize: 12)),
                                 trailing: PopupMenuButton<String>(
                                   onSelected: (value) {
-                                    if (value == 'edit') _openUserEdit(user);
-                                    else if (value == 'block') _confirmAndExecuteBlock(user);
-                                    else if (value == 'delete') _confirmAndExecuteDelete(user);
+                                    if (value == 'edit') {
+                                      _openUserEdit(user);
+                                    } else if (value == 'block') {
+                                      _confirmAndExecuteBlock(user);
+                                    } else if (value == 'delete') {
+                                      _confirmAndExecuteDelete(user);
+                                    }
                                   },
                                   itemBuilder: (context) => [
                                     const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit), title: Text('Bearbeiten'))),

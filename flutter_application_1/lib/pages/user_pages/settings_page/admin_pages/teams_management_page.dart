@@ -62,6 +62,7 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
 
         // Fallback: if the team no longer exists, treat as success
         final bool existsAfter = await _checkTeamExistsRemotely(team);
+        if (!mounted) return;
         if (!existsAfter) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Team wurde möglicherweise gelöscht (Server antwortete mit Fehler, aber Team nicht mehr vorhanden).')));
           await _fetchAllTeams();
@@ -77,6 +78,7 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
         debugPrint('delete_team.php returned empty body');
 
         final bool existsAfter = await _checkTeamExistsRemotely(team);
+        if (!mounted) return;
         if (!existsAfter) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Team wurde gelöscht (leere Server-Antwort).')));
           await _fetchAllTeams();
@@ -94,6 +96,7 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
         debugPrint('delete_team.php invalid json: $body');
 
         final bool existsAfter = await _checkTeamExistsRemotely(team);
+        if (!mounted) return;
         if (!existsAfter) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Team wurde gelöscht (Server-Antwort nicht-JSON).')));
           await _fetchAllTeams();
@@ -119,6 +122,7 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
 
       // As last resort, check whether the team still exists
       final bool existsAfter = await _checkTeamExistsRemotely(team);
+      if (!mounted) return;
       if (!existsAfter) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Team wurde gelöscht (Fehler, aber Team nicht mehr vorhanden).')));
         await _fetchAllTeams();
@@ -154,6 +158,7 @@ class _TeamsManagementPageState extends State<TeamsManagementPage> {
     final url = Uri.parse('$ipAddress/get_all_teams_management.php');
     try {
       final response = await http.post(url);
+      if (!mounted) return;
       final Map<String, dynamic> data = json.decode(response.body);
 
       if (data['success'] == true) {

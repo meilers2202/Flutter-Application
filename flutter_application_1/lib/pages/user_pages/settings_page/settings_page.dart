@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
+import 'package:pewpew_connect/service/consent_service.dart';
 import 'package:pewpew_connect/service/notification_service.dart';
+import 'package:pewpew_connect/service/performance_service.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -16,11 +20,14 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = false;
   bool _loadingNotifications = true;
+  bool _analyticsEnabled = false;
+  bool _loadingAnalytics = true;
 
   @override
   void initState() {
     super.initState();
     _loadNotificationState();
+    _loadAnalyticsState();
   }
 
   Future<void> _loadNotificationState() async {
@@ -29,6 +36,15 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _notificationsEnabled = enabled;
       _loadingNotifications = false;
+    });
+  }
+
+  Future<void> _loadAnalyticsState() async {
+    final enabled = await ConsentService.instance.isAllowed();
+    if (!mounted) return;
+    setState(() {
+      _analyticsEnabled = enabled;
+      _loadingAnalytics = false;
     });
   }
 
@@ -47,6 +63,30 @@ class _SettingsPageState extends State<SettingsPage> {
           enabled
               ? 'Benachrichtigungen aktiviert.'
               : 'Benachrichtigungen deaktiviert oder blockiert.',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleAnalytics(bool value) async {
+    setState(() => _loadingAnalytics = true);
+    await ConsentService.instance.setConsent(value);
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(value);
+    await AnalyticsService.instance.setCollectionEnabled(value);
+    await PerformanceService.instance.setCollectionEnabled(value);
+
+    if (!mounted) return;
+    setState(() {
+      _analyticsEnabled = value;
+      _loadingAnalytics = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value
+              ? 'Diagnose & Analyse aktiviert.'
+              : 'Diagnose & Analyse deaktiviert.',
         ),
       ),
     );
@@ -108,6 +148,20 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               value: _notificationsEnabled,
               onChanged: _loadingNotifications ? null : _toggleNotifications,
+            ),
+            const Divider(),
+            SwitchListTile(
+              title: Text(
+                'Diagnose & Analyse',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              subtitle: const Text('Hilft bei Stabilitaet und Performance.'),
+              secondary: Icon(
+                Icons.analytics,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+              value: _analyticsEnabled,
+              onChanged: _loadingAnalytics ? null : _toggleAnalytics,
             ),
           ],
         ),

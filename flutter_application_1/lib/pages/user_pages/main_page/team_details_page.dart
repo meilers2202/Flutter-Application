@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:pewpew_connect/service/imports.dart';
-import 'package:pewpew_connect/pages/user_pages/main_page/user_profile_page.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamName;
@@ -66,6 +66,9 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       );
 
       if (data['success'] == true) {
+        AnalyticsService.instance.logEvent('team_left', parameters: {
+          'team_name': widget.teamName,
+        });
         widget.onTeamChange(
           username: widget.currentUsername,
           stayLoggedIn: true, // Added this required parameter
@@ -176,7 +179,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       builder: (context) => AlertDialog(
         title: const Text("Mitglied entfernen"),
         content: Text(
-            "Möchten Sie ${member} wirklich aus dem Team entfernen?"),
+          "Möchten Sie $member wirklich aus dem Team entfernen?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -202,7 +205,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       builder: (context) => AlertDialog(
         title: const Text("Teamleitung übertragen"),
         content: Text(
-            "Möchten Sie die Teamleitung wirklich an ${member} übertragen?"),
+          "Möchten Sie die Teamleitung wirklich an $member übertragen?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

@@ -294,7 +294,7 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
                         children: [
                           Text(field.fieldname, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
-                          Text('${field.company}', style: const TextStyle(fontStyle: FontStyle.italic)),
+                          Text(field.company, style: const TextStyle(fontStyle: FontStyle.italic)),
                           Text('${field.street} ${field.housenumber}'),
                           Text('${field.postalcode} ${field.city}'),
                           const Divider(),

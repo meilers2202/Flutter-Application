@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:pewpew_connect/service/constants.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
+import 'package:pewpew_connect/service/performance_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FieldMapPage extends StatefulWidget {
@@ -58,27 +58,32 @@ class _FieldMapPageState extends State<FieldMapPage> {
   }
 
   Future<void> _initializeMap() async {
-    final permissionOk = await _ensureLocationPermission();
-    if (!permissionOk) {
+    final trace = await PerformanceService.instance.startTrace('map_load');
+    try {
+      final permissionOk = await _ensureLocationPermission();
+      if (!permissionOk) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      _currentLatLng = LatLng(position.latitude, position.longitude);
+      _accuracyMeters = position.accuracy;
+
+      if (widget.destinationAddress != null && widget.destinationAddress!.trim().isNotEmpty) {
+        _destinationLatLng = await _geocodeAddress(widget.destinationAddress!.trim());
+        _updateDistanceEstimate();
+        _infoError = _destinationLatLng == null ? 'Adresse nicht gefunden.' : null;
+      } else {
+        _infoError = 'Keine Zieladresse vorhanden.';
+      }
+
+      _startPositionStream();
+
       if (mounted) setState(() => _isLoading = false);
-      return;
+    } finally {
+      await PerformanceService.instance.stopTrace(trace);
     }
-
-    final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
-    _currentLatLng = LatLng(position.latitude, position.longitude);
-    _accuracyMeters = position.accuracy;
-
-    if (widget.destinationAddress != null && widget.destinationAddress!.trim().isNotEmpty) {
-      _destinationLatLng = await _geocodeAddress(widget.destinationAddress!.trim());
-      _updateDistanceEstimate();
-      _infoError = _destinationLatLng == null ? 'Adresse nicht gefunden.' : null;
-    } else {
-      _infoError = 'Keine Zieladresse vorhanden.';
-    }
-
-    _startPositionStream();
-
-    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<bool> _ensureLocationPermission() async {
@@ -319,6 +324,10 @@ class _FieldMapPageState extends State<FieldMapPage> {
       _showSnack('Start oder Ziel fehlt.');
       return;
     }
+
+    AnalyticsService.instance.logEvent('route_started', parameters: {
+      'destination': widget.destinationName ?? 'unknown',
+    });
 
     final directionsUrl = Uri.parse(
       'https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${dest.latitude},${dest.longitude}',

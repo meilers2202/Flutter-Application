@@ -167,7 +167,7 @@ class PersonalDataPageState extends State<PersonalDataPage> {
                   fit: BoxFit.cover,
                 ),
                 Container(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                 ),
               ],
             ),

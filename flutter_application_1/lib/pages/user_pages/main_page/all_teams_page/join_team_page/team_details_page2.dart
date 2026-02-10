@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pewpew_connect/service/analytics_service.dart';
 import 'package:pewpew_connect/service/constants.dart';
 
 class TeamDetailsPage2 extends StatefulWidget {
@@ -42,6 +43,7 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
 
       if (data['success'] == true) {
         final List<dynamic> membersData = data['members'] ?? [];
+        if (!mounted) return;
         setState(() {
           _members = membersData.map((e) => e.toString()).toList();
         });
@@ -57,7 +59,9 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
         SnackBar(content: Text('Verbindungsfehler: $e')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -124,6 +128,10 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
                                       });
 
                                       if (result != null && result is String) {
+                                        if (!context.mounted) return;
+                                        AnalyticsService.instance.logEvent('team_joined', parameters: {
+                                          'team_name': widget.teamName,
+                                        });
                                         Navigator.pop(context, result);
                                       }
                                     },
@@ -196,6 +204,10 @@ class _TeamDetailsPage2State extends State<TeamDetailsPage2> {
                                     });
 
                                     if (result != null && result is String) {
+                                      if (!context.mounted) return;
+                                      AnalyticsService.instance.logEvent('team_joined', parameters: {
+                                        'team_name': widget.teamName,
+                                      });
                                       Navigator.pop(context, result);
                                     }
                                   },

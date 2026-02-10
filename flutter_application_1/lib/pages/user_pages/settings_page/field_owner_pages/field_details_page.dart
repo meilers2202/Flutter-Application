@@ -193,6 +193,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                     '/editfield',
                     arguments: widget.field,
                   ).then((result) { 
+                    if (!context.mounted) return;
                     if (result == true) {
                       Navigator.of(context).pop(true);
                     }

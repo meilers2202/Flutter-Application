@@ -1,5 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'package:pewpew_connect/service/imports.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
+import 'package:pewpew_connect/service/performance_service.dart';
 
 class Fields2 {
   final int id;
@@ -65,6 +67,7 @@ class _FieldListState extends State<FieldListPage> {
 
   // Ruft alle Felder vom Backend ab (Bleibt unverändert)
   Future<void> _fetchAllFields() async {
+    final trace = await PerformanceService.instance.startTrace('field_list_load');
     final url = Uri.parse('$ipAddress/get_fields.php');
     try {
       final response = await http.post(url); 
@@ -83,6 +86,9 @@ class _FieldListState extends State<FieldListPage> {
                 .where((field) => field.checkstate == 1) // Nur genehmigte Felder
                 .toList();
             _isLoading = false;
+          });
+          AnalyticsService.instance.logEvent('field_list_loaded', parameters: {
+            'count': _fields.length,
           });
         }
       } else {
@@ -105,6 +111,7 @@ class _FieldListState extends State<FieldListPage> {
         );
       }
     }
+    await PerformanceService.instance.stopTrace(trace);
   }
 
   // Die _updateFieldStatus-Funktion wird nun nur noch von FieldReviewPage aufgerufen,

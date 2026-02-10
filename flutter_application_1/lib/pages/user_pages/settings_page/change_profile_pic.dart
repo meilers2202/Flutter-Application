@@ -165,7 +165,7 @@ class _ImageUploadPageState extends State<ImageUploadPage> {
                     icon: const Icon(Icons.photo_library),
                     label: Text(_selectedImage == null ? 'Bild auswählen' : 'Bild ändern'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.8),
+                      backgroundColor: Colors.white.withValues(alpha: 0.8),
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                     ),

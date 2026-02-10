@@ -1,8 +1,14 @@
 import 'service/imports.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:pewpew_connect/service/notification_service.dart';
 import 'package:pewpew_connect/service/navigation_service.dart';
+import 'package:pewpew_connect/service/analytics_service.dart';
+import 'package:pewpew_connect/service/consent_service.dart';
+import 'package:pewpew_connect/service/performance_service.dart';
+import 'package:pewpew_connect/service/remote_config_service.dart';
+import 'package:pewpew_connect/service/update_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -24,6 +30,18 @@ void main() async {
 
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  final consentAllowed = await ConsentService.instance.isAllowed();
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(consentAllowed);
+  await AnalyticsService.instance.setCollectionEnabled(consentAllowed);
+  await PerformanceService.instance.setCollectionEnabled(consentAllowed);
+
+  RemoteConfigService.instance.initialize();
   await NotificationService.instance.initialize();
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -36,8 +54,44 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _prompted = false;
+
+  Future<void> _promptConsentOnce() async {
+    if (_prompted) return;
+    _prompted = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Use the Navigator overlay context so MaterialLocalizations are available.
+      final navContext = NavigationService.navigatorKey.currentState?.overlay?.context;
+      if (navContext == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          final retryContext = NavigationService.navigatorKey.currentState?.overlay?.context;
+          if (retryContext == null) return;
+          await _runConsentFlow(retryContext);
+        });
+        return;
+      }
+      await _runConsentFlow(navContext);
+    });
+  }
+
+  Future<void> _runConsentFlow(BuildContext navContext) async {
+    await ConsentService.instance.maybePrompt(navContext);
+    final allowed = await ConsentService.instance.isAllowed();
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(allowed);
+    await AnalyticsService.instance.setCollectionEnabled(allowed);
+    await PerformanceService.instance.setCollectionEnabled(allowed);
+    await AnalyticsService.instance.logAppStart();
+    if (!navContext.mounted) return;
+    await UpdateService.instance.checkAndPrompt(navContext);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +100,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: NavigationService.navigatorKey,
+      navigatorObservers: [AnalyticsService.instance.observer()],
+      builder: (context, child) {
+        _promptConsentOnce();
+        return child ?? const SizedBox.shrink();
+      },
       themeMode: appState.themeMode,
       theme: ThemeData(
         brightness: Brightness.light,

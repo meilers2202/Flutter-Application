@@ -1,4 +1,5 @@
 import 'package:pewpew_connect/service/imports.dart';
+import 'package:pewpew_connect/service/remote_config_service.dart';
 
 int addincrement = 0;
 
@@ -53,11 +54,13 @@ class MainPageState extends State<MainPage> with RouteAware {
   String? _teamrole;
   String _version = '';
   bool _isLoading = true;
+  String _maintenanceMessage = '';
+  bool _showMapButton = true;
 
   @override
   void initState() {
     super.initState();
-    _initPackageInfo();
+    _initPackageInfo().then((_) => _loadRemoteConfig());
     fetchProfileData(); 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = Provider.of<AppState>(context, listen: false);
@@ -106,6 +109,29 @@ class MainPageState extends State<MainPage> with RouteAware {
     setState(() {
       _version = info.version;
     });
+  }
+
+  Future<void> _loadRemoteConfig() async {
+    await RemoteConfigService.instance.refresh();
+    if (!mounted) return;
+    setState(() {
+      _maintenanceMessage = RemoteConfigService.instance.maintenanceMessage;
+      _showMapButton = RemoteConfigService.instance.showMapButton;
+    });
+
+    if (_version.isNotEmpty && RemoteConfigService.instance.isUpdateRequired(_version)) {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Update erforderlich'),
+          content: const Text('Bitte aktualisiere die App, um fortzufahren.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> fetchProfileData() async {
@@ -274,21 +300,41 @@ class MainPageState extends State<MainPage> with RouteAware {
           Positioned.fill(child: Image.asset('assets/images/app_bgr.jpg', fit: BoxFit.cover)),
           Padding(
             padding: const EdgeInsets.all(20.0),
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+            child: Column(
               children: [
-                _buildMenuButton(Icons.group, _fetchTeamMembersAndNavigate),
-                _buildMenuButton(Icons.group_add, () async {
-                  final newTeam = await Navigator.of(context).push<String>(
-                    MaterialPageRoute(builder: (_) => CreateTeamPage(userService: _userService, username: widget.currentUsername!)),
-                  );
-                  if (newTeam != null) fetchProfileData();
-                }),
-                _buildMenuButton(Icons.list, () => Navigator.of(context).pushNamed('/allTeams', arguments: {'currentUsername': widget.currentUsername, 'userTeam': _userTeam})),
-                _buildMenuButton(Icons.area_chart_outlined, () => Navigator.of(context).pushNamed('/fieldslist')),
-                _buildMenuButton(Icons.gps_fixed, _handleGps),
+                if (_maintenanceMessage.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _maintenanceMessage,
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    children: [
+                      _buildMenuButton(Icons.group, _fetchTeamMembersAndNavigate),
+                      _buildMenuButton(Icons.group_add, () async {
+                        final newTeam = await Navigator.of(context).push<String>(
+                          MaterialPageRoute(builder: (_) => CreateTeamPage(userService: _userService, username: widget.currentUsername!)),
+                        );
+                        if (newTeam != null) fetchProfileData();
+                      }),
+                      _buildMenuButton(Icons.list, () => Navigator.of(context).pushNamed('/allTeams', arguments: {'currentUsername': widget.currentUsername, 'userTeam': _userTeam})),
+                      _buildMenuButton(Icons.area_chart_outlined, () => Navigator.of(context).pushNamed('/fieldslist')),
+                      if (_showMapButton) _buildMenuButton(Icons.gps_fixed, _handleGps),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

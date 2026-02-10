@@ -1,55 +1,56 @@
 <?php
-require_once 'db_config.php';
-header('Content-Type: application/json');
+// Use the project's PDO DB service for a consistent connection
+require_once 'db_service.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    echo json_encode(["success" => false, "message" => "Verbindungsfehler: " . $conn->connect_error]);
-    exit();
-}
+// db_service.php already sets JSON headers and creates $pdo or exits on failure
 
 $teamName = $_POST['teamName'] ?? null;
 
-if ($teamName === null || empty($teamName)) {
-    echo json_encode(["success" => false, "message" => "Teamname fehlt."]);
-    $conn->close();
+if ($teamName === null || trim($teamName) === '') {
+    echo json_encode(["success" => false, "message" => "Teamname fehlt."]); 
     exit();
 }
 
-// Zuerst die group_id des Teams finden
-$stmt = $conn->prepare("SELECT id FROM groups WHERE name = ?");
-$stmt->bind_param("s", $teamName);
-$stmt->execute();
-$result = $stmt->get_result();
+try {
+    // Start transaction to ensure consistency
+    $pdo->beginTransaction();
 
-if ($result->num_rows === 0) {
-    echo json_encode(["success" => false, "message" => "Team nicht gefunden."]);
-    $stmt->close();
-    $conn->close();
-    exit();
+    // Find group id
+    $stmt = $pdo->prepare('SELECT id FROM groups WHERE name = :name');
+    $stmt->execute([':name' => $teamName]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+        // No such team
+        $pdo->rollBack();
+        echo json_encode(["success" => false, "message" => "Team nicht gefunden."]); 
+        exit();
+    }
+
+    $groupId = (int)$row['id'];
+
+    // Clear group association for users in this group (also clear teamrole)
+    $stmt = $pdo->prepare('UPDATE users SET group_id = NULL, teamrole = NULL WHERE group_id = :gid');
+    $stmt->execute([':gid' => $groupId]);
+
+    // Delete the group
+    $stmt = $pdo->prepare('DELETE FROM groups WHERE id = :gid');
+    $ok = $stmt->execute([':gid' => $groupId]);
+
+    if ($ok) {
+        $pdo->commit();
+        echo json_encode(["success" => true, "message" => "Team erfolgreich gelöscht."]); 
+    } else {
+        $pdo->rollBack();
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Fehler beim Löschen des Teams."]); 
+    }
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    http_response_code(500);
+    echo json_encode(["success" => false, "message" => "Server-Fehler: " . $e->getMessage()]);
 }
 
-$row = $result->fetch_assoc();
-$groupId = $row['id'];
-$stmt->close();
-
-// Setze die group_id aller Benutzer in diesem Team auf NULL
-$stmt_update_users = $conn->prepare("UPDATE users SET group_id = NULL WHERE group_id = ?");
-$stmt_update_users->bind_param("i", $groupId);
-$stmt_update_users->execute();
-$stmt_update_users->close();
-
-// Lösche das Team
-$stmt_delete_team = $conn->prepare("DELETE FROM groups WHERE id = ?");
-$stmt_delete_team->bind_param("i", $groupId);
-
-if ($stmt_delete_team->execute()) {
-    echo json_encode(["success" => true, "message" => "Team erfolgreich gelöscht."]);
-} else {
-    echo json_encode(["success" => false, "message" => "Fehler beim Löschen des Teams: " . $stmt_delete_team->error]);
-}
-
-$stmt_delete_team->close();
-$conn->close();
 ?>
