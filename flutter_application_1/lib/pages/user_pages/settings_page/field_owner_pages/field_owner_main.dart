@@ -11,6 +11,8 @@ class Field {
   final String housenumber;
   final String postalcode;
   final String rules;
+  final int? homeTeamId;
+  final String? homeTeamName;
   final String checkstatename;
   final String checkstateColor;
 
@@ -24,6 +26,8 @@ class Field {
     required this.housenumber,
     required this.postalcode,
     required this.rules,
+    this.homeTeamId,
+    this.homeTeamName,
     required this.checkstatename,
     required this.checkstateColor,
   });
@@ -40,6 +44,8 @@ class Field {
       housenumber: json['housenumber']?.toString() ?? '',
       postalcode: json['postalcode']?.toString() ?? '',
       rules: json['rules']?.toString() ?? '',
+      homeTeamId: json['home_team_id'] != null ? int.tryParse(json['home_team_id'].toString()) : null,
+      homeTeamName: json['home_team_name']?.toString(),
       checkstatename: json['checkstatename']?.toString() ?? 'Unbekannt',
       checkstateColor: json['color_hint']?.toString() ?? 'grau',
     );
@@ -205,33 +211,46 @@ class _FieldOwnerMainPageState extends State<FieldOwnerMainPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.add),
-                onPressed: () {
-                  Navigator.of(context)
-                      .pushNamed('/fieldcreate')
-                      .then((_) => _fetchAndLoadFields());
-                },
-                label: const Text(
-                  "Feld hinzufügen",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/app_bgr.jpg'),
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _fetchAndLoadFields,
-              child: _buildBody(),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        Navigator.of(context)
+                            .pushNamed('/fieldcreate')
+                            .then((_) => _fetchAndLoadFields());
+                      },
+                      label: const Text(
+                        "Feld hinzufügen",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _fetchAndLoadFields,
+                    child: _buildBody(),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

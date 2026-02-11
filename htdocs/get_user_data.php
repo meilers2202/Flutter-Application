@@ -1,36 +1,60 @@
 <?php
-require_once 'db_config.php';
+// Fehleranzeige zum Debuggen
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 header('Content-Type: application/json');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+// Nutze db_service.php (wie in deinem zweiten Beispiel)
+require_once 'db_service.php'; 
 
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Verbindungsfehler zur Datenbank: ' . $conn->connect_error]);
-    exit();
-}
+// 1. DATEN-IMPORT (Hybrid-Lösung)
+// Versuche zuerst JSON aus dem Body zu lesen
+$json_data = json_decode(file_get_contents('php://input'), true);
 
-$data = json_decode(file_get_contents('php://input'), true);
+// Nimm den Usernamen entweder aus dem JSON ODER aus dem normalen $_POST
+$username = $json_data['username'] ?? $_POST['username'] ?? null;
 
-$username = $data['username'] ?? '';
-
-if (empty($username)) {
+if (!$username) {
     echo json_encode(['success' => false, 'message' => 'Benutzername fehlt.']);
-    $conn->close();
     exit();
 }
 
-$stmt = $conn->prepare("SELECT username, email, city, team, member_since, group_id FROM users WHERE username = ?");
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$result = $stmt->get_result();
+try {
+    // 2. SQL-ABFRAGE (mit JOINs für das Team)
+    $sql = "SELECT 
+                u.username, 
+                u.email, 
+                u.city, 
+                u.created_at, 
+                g.name AS team 
+            FROM users u
+            LEFT JOIN groups g ON u.group_id = g.id 
+            WHERE u.username = :username";
 
-if ($result->num_rows > 0) {
-    $user = $result->fetch_assoc();
-    echo json_encode(['success' => true, 'user' => $user]);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Benutzer nicht gefunden.']);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['username' => $username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user) {
+        // Datum schön formatieren
+        $memberSince = date("d.m.Y", strtotime($user['created_at']));
+        
+        echo json_encode([
+            'success' => true, 
+            'user' => [
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'city' => $user['city'],
+                'team' => $user['team'] ?? 'Kein Team',
+                'memberSince' => $memberSince
+            ]
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Benutzer nicht gefunden.']);
+    }
+
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Datenbankfehler: ' . $e->getMessage()]);
 }
-
-$stmt->close();
-$conn->close();
 ?>

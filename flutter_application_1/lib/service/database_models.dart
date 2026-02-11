@@ -46,6 +46,8 @@ class Field {
   final String? postalcode;
   final String? city;
   final String? company;
+  final int? homeTeamId;
+  final String? homeTeamName;
   final int fieldOwnerId; // Verweist auf users.id
   final int checkstate; // Verweist auf checkstate.id
 
@@ -59,6 +61,8 @@ class Field {
     this.postalcode,
     this.city,
     this.company,
+    this.homeTeamId,
+    this.homeTeamName,
     required this.fieldOwnerId,
     required this.checkstate,
   });
@@ -74,6 +78,8 @@ class Field {
       postalcode: json['postalcode'] as String?,
       city: json['city'] as String?,
       company: json['company'] as String?,
+      homeTeamId: json['home_team_id'] != null ? int.tryParse(json['home_team_id'].toString()) : null,
+      homeTeamName: json['home_team_name'] as String?,
       fieldOwnerId: int.parse(json['field_owner_id'].toString()),
       checkstate: int.parse(json['checkstate'].toString()),
     );

@@ -202,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           }
                         },
                         icon: const Icon(Icons.vpn_key, color: Colors.white),
-                        label: const Text('Passwort ändern'),
+                        label: const Text('Passwort ändern', style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
                       ),
                     ),
@@ -370,7 +370,7 @@ class _ProfilePageState extends State<ProfilePage> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
-            child: const Text('Speichern'),
+            child: const Text('Speichern', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -432,7 +432,7 @@ class _ProfilePageState extends State<ProfilePage> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
-            child: const Text('Speichern'),
+            child: const Text('Speichern', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

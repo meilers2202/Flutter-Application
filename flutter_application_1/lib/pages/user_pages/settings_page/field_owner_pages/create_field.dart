@@ -25,11 +25,42 @@ class _CreateFieldState extends State<CreateField> {
 
   int? _currentUserId;
   bool _isLoading = true;
+  bool _teamsLoading = true;
+  List<Map<String, dynamic>> _teams = [];
+  int? _selectedHomeTeamId;
 
   @override
   void initState() {
     super.initState();
     _fetchUserId();
+    _fetchTeams();
+  }
+
+  Future<void> _fetchTeams() async {
+    final url = Uri.parse('$ipAddress/get_teams.php');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['success'] == true && mounted) {
+          final rawTeams = (data['teams'] as List?) ?? [];
+          setState(() {
+            _teams = rawTeams
+                .map((t) => Map<String, dynamic>.from(t as Map))
+                .toList();
+            _teamsLoading = false;
+          });
+        } else if (mounted) {
+          setState(() => _teamsLoading = false);
+        }
+      } else if (mounted) {
+        setState(() => _teamsLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _teamsLoading = false);
+      }
+    }
   }
 
   Future<void> _fetchUserId() async {
@@ -102,6 +133,7 @@ class _CreateFieldState extends State<CreateField> {
           'postalcode': _postalcodeController.text,
           'city': _cityController.text,
           'company': _companyController.text,
+          'home_team_id': _selectedHomeTeamId?.toString() ?? '',
           'field_owner_id': _currentUserId.toString(),
         },
       );
@@ -158,12 +190,24 @@ class _CreateFieldState extends State<CreateField> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/app_bgr.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
             const Text(
               "Fielddetails",
               style: TextStyle(
@@ -173,6 +217,8 @@ class _CreateFieldState extends State<CreateField> {
             ),
             const SizedBox(height: 5),
             _buildTextField(_companyController, 'Betreiber'),
+            const SizedBox(height: 15),
+            _buildHomeTeamDropdown(),
             const SizedBox(height: 15),
             _buildTextField(_fieldnameController, 'Feldname'),
             const SizedBox(height: 15),
@@ -215,8 +261,12 @@ class _CreateFieldState extends State<CreateField> {
                 ),
               ),
             ),
-          ],
-        ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -248,6 +298,44 @@ class _CreateFieldState extends State<CreateField> {
         filled: true,
         fillColor: Colors.white,
         labelStyle: const TextStyle(color: Colors.grey),
+      ),
+      style: const TextStyle(color: Colors.black),
+    );
+  }
+
+  Widget _buildHomeTeamDropdown() {
+    if (_teamsLoading) {
+      return const SizedBox(
+        height: 56,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final items = <DropdownMenuItem<int?>>[
+      const DropdownMenuItem<int?>(
+        value: null,
+        child: Text('Kein Heimteam'),
+      ),
+      ..._teams.map((t) {
+        final id = int.tryParse(t['id'].toString());
+        final name = t['name']?.toString() ?? 'Unbekannt';
+        return DropdownMenuItem<int?>(
+          value: id,
+          child: Text(name),
+        );
+      }),
+    ];
+
+    return DropdownButtonFormField<int?>(
+      initialValue: _selectedHomeTeamId,
+      items: items,
+      onChanged: (value) => setState(() => _selectedHomeTeamId = value),
+      decoration: const InputDecoration(
+        labelText: 'Heimteam',
+        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+        labelStyle: TextStyle(color: Colors.grey),
       ),
       style: const TextStyle(color: Colors.black),
     );

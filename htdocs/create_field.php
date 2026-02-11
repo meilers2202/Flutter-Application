@@ -20,6 +20,7 @@ $housenumber = $_POST['housenumber'] ?? null;
 $postalcode = $_POST['postalcode'] ?? null;
 $city = $_POST['city'] ?? null;
 $company = $_POST['company'] ?? null;
+$home_team_id = isset($_POST['home_team_id']) && $_POST['home_team_id'] !== '' ? (int)$_POST['home_team_id'] : null;
 $field_owner_id = isset($_POST['field_owner_id']) ? (int)$_POST['field_owner_id'] : null;
 
 // Validierung
@@ -29,8 +30,8 @@ if (!$fieldname || !$description || !$field_owner_id) {
 }
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO fields (fieldname, description, rules, street, housenumber, postalcode, city, company, field_owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $success = $stmt->execute([$fieldname, $description, $rules, $street, $housenumber, $postalcode, $city, $company, $field_owner_id]);
+    $stmt = $pdo->prepare("INSERT INTO fields (fieldname, description, rules, street, housenumber, postalcode, city, company, home_team_id, field_owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $success = $stmt->execute([$fieldname, $description, $rules, $street, $housenumber, $postalcode, $city, $company, $home_team_id, $field_owner_id]);
 
     if ($success) {
         echo json_encode(['success' => true, 'message' => 'Feld erfolgreich erstellt.']);

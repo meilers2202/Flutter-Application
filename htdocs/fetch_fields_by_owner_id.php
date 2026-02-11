@@ -9,11 +9,12 @@ if (!isset($_POST['field_owner_id'])) {
 $fieldOwnerId = (int)$_POST['field_owner_id'];
 
 $sql = "SELECT f.id, f.fieldname, f.description, f.street, f.housenumber, f.postalcode, 
-               f.rules, f.city, f.company, f.checkstate AS checkstate_id, 
-               c.status_name AS checkstatename, c.color_hint 
-        FROM fields f 
-        JOIN checkstate c ON f.checkstate = c.id 
-        WHERE f.field_owner_id = :field_owner_id";
+         f.rules, f.city, f.company, f.home_team_id, g.name AS home_team_name, f.checkstate AS checkstate_id, 
+         c.status_name AS checkstatename, c.color_hint 
+     FROM fields f 
+     JOIN checkstate c ON f.checkstate = c.id 
+     LEFT JOIN groups g ON f.home_team_id = g.id
+     WHERE f.field_owner_id = :field_owner_id";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['field_owner_id' => $fieldOwnerId]);

@@ -24,14 +24,29 @@ try {
         exit;
     }
 
+    // Benutzer prüfen und aktuelle Rolle lesen
+    $usr = $pdo->prepare("SELECT id, ingamerole_id FROM users WHERE username = :username");
+    $usr->execute(['username' => $username]);
+    $userRow = $usr->fetch(PDO::FETCH_ASSOC);
+
+    if (!$userRow) {
+        echo json_encode(["success" => false, "message" => "Benutzer nicht gefunden."]);
+        exit;
+    }
+
+    if ((string)$userRow['ingamerole_id'] === (string)$roleId) {
+        echo json_encode(["success" => false, "message" => "Rolle ist bereits gesetzt."]);
+        exit;
+    }
+
     // Update des Benutzers
-    $upd = $pdo->prepare("UPDATE users SET ingamerole_id = :rid WHERE username = :username");
-    $upd->execute(['rid' => $roleId, 'username' => $username]);
+    $upd = $pdo->prepare("UPDATE users SET ingamerole_id = :rid WHERE id = :id");
+    $upd->execute(['rid' => $roleId, 'id' => $userRow['id']]);
 
     if ($upd->rowCount() > 0) {
         echo json_encode(["success" => true, "message" => "Rang erfolgreich aktualisiert."]);
     } else {
-        echo json_encode(["success" => false, "message" => "Kein Update durchgeführt (Benutzer nicht gefunden oder gleiche Rolle)."]);
+        echo json_encode(["success" => false, "message" => "Update fehlgeschlagen."]);
     }
 } catch (PDOException $e) {
     echo json_encode(["success" => false, "message" => "Datenbankfehler: " . $e->getMessage()]);

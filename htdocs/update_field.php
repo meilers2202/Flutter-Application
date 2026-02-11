@@ -16,13 +16,14 @@ $housenumber = $_POST['housenumber'] ?? null;
 $postalcode = $_POST['postalcode'] ?? null;
 $city = $_POST['city'] ?? null;
 $company = $_POST['company'] ?? null;
+$home_team_id = isset($_POST['home_team_id']) && $_POST['home_team_id'] !== '' ? (int)$_POST['home_team_id'] : null;
 
 if (!$id || !$fieldname) {
     echo json_encode(['success' => false, 'message' => 'Feld-ID oder Feldname fehlt.']);
     exit();
 }
 
-$sql = "UPDATE fields SET fieldname = :fieldname, description = :description, rules = :rules, street = :street, housenumber = :housenumber, postalcode = :postalcode, city = :city, company = :company WHERE id = :id";
+$sql = "UPDATE fields SET fieldname = :fieldname, description = :description, rules = :rules, street = :street, housenumber = :housenumber, postalcode = :postalcode, city = :city, company = :company, home_team_id = :home_team_id WHERE id = :id";
 
 $stmt = $pdo->prepare($sql);
 
@@ -35,6 +36,7 @@ $params = [
     ':postalcode' => $postalcode,
     ':city' => $city,
     ':company' => $company,
+    ':home_team_id' => $home_team_id,
     ':id' => $id,
 ];
 

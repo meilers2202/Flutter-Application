@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
--- Host:                         second-humanity.com
--- Server-Version:               10.11.13-MariaDB-0ubuntu0.24.04.1 - Ubuntu 24.04
+-- Host:                         81.169.190.19
+-- Server-Version:               10.11.14-MariaDB-0ubuntu0.24.04.1 - Ubuntu 24.04
 -- Server-Betriebssystem:        debian-linux-gnu
--- HeidiSQL Version:             12.12.0.7122
+-- HeidiSQL Version:             12.15.0.7171
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -14,6 +14,11 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+
+-- Exportiere Datenbank-Struktur für db_airsoftapp
+CREATE DATABASE IF NOT EXISTS `db_airsoftapp` /*!40100 DEFAULT CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci */;
+USE `db_airsoftapp`;
+
 -- Exportiere Struktur von Tabelle db_airsoftapp.checkstate
 CREATE TABLE IF NOT EXISTS `checkstate` (
   `id` int(11) NOT NULL,
@@ -22,12 +27,87 @@ CREATE TABLE IF NOT EXISTS `checkstate` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Exportiere Daten aus Tabelle db_airsoftapp.checkstate: ~4 rows (ungefähr)
-INSERT INTO `checkstate` (`id`, `status_name`, `color_hint`) VALUES
-	(0, 'In Prüfung', 'Grau'),
-	(1, 'Genehmigt', 'Grün'),
-	(2, 'In Klärung', 'Gelb'),
-	(3, 'Abgelehnt', 'Rot');
+-- Daten-Export vom Benutzer nicht ausgewählt
+
+-- Exportiere Struktur von Tabelle db_airsoftapp.field_event_power_limits
+CREATE TABLE IF NOT EXISTS `field_event_power_limits` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_id` int(11) NOT NULL,
+  `class_name` varchar(100) NOT NULL,
+  `limit_value` varchar(50) NOT NULL,
+  `distance` varchar(50) NOT NULL,
+  `requirement` varchar(255) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_field_event_power_limits_event_id` (`event_id`),
+  CONSTRAINT `fk_field_event_power_limits_event` FOREIGN KEY (`event_id`) REFERENCES `field_events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Daten-Export vom Benutzer nicht ausgewählt
+
+-- Exportiere Struktur von Tabelle db_airsoftapp.field_event_tickets
+CREATE TABLE IF NOT EXISTS `field_event_tickets` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_id` int(11) NOT NULL,
+  `label` varchar(100) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `currency` varchar(10) NOT NULL DEFAULT 'EUR',
+  `notes` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_field_event_tickets_event_id` (`event_id`),
+  CONSTRAINT `fk_field_event_tickets_event` FOREIGN KEY (`event_id`) REFERENCES `field_events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Daten-Export vom Benutzer nicht ausgewählt
+
+-- Exportiere Struktur von Tabelle db_airsoftapp.field_events
+CREATE TABLE IF NOT EXISTS `field_events` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `field_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `location_lat` decimal(10,7) DEFAULT NULL,
+  `location_lng` decimal(10,7) DEFAULT NULL,
+  `start_at` datetime NOT NULL,
+  `end_at` datetime DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `scenario` varchar(255) DEFAULT NULL,
+  `organizer` varchar(255) DEFAULT NULL,
+  `min_age` int(11) DEFAULT NULL,
+  `fps_limit` int(11) DEFAULT NULL,
+  `joule_limit` decimal(5,2) DEFAULT NULL,
+  `required_gear` text DEFAULT NULL,
+  `chrono_at` datetime DEFAULT NULL,
+  `briefing_at` datetime DEFAULT NULL,
+  `medic_contact` varchar(255) DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_field_events_field_id` (`field_id`),
+  KEY `idx_field_events_start_at` (`start_at`),
+  CONSTRAINT `fk_field_events_field` FOREIGN KEY (`field_id`) REFERENCES `fields` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Daten-Export vom Benutzer nicht ausgewählt
+
+-- Exportiere Struktur von Tabelle db_airsoftapp.field_images
+CREATE TABLE IF NOT EXISTS `field_images` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `field_id` int(11) NOT NULL,
+  `image_url` varchar(255) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_cover` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_field_images_field_id` (`field_id`),
+  KEY `idx_field_images_sort` (`field_id`,`sort_order`),
+  CONSTRAINT `fk_field_images_field` FOREIGN KEY (`field_id`) REFERENCES `fields` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Daten-Export vom Benutzer nicht ausgewählt
 
 -- Exportiere Struktur von Tabelle db_airsoftapp.fieldowner
 CREATE TABLE IF NOT EXISTS `fieldowner` (
@@ -35,11 +115,9 @@ CREATE TABLE IF NOT EXISTS `fieldowner` (
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Exportiere Daten aus Tabelle db_airsoftapp.fieldowner: ~1 rows (ungefähr)
-INSERT INTO `fieldowner` (`user_id`, `name`) VALUES
-	(1, 'Marvin Eilers');
+-- Daten-Export vom Benutzer nicht ausgewählt
 
 -- Exportiere Struktur von Tabelle db_airsoftapp.fields
 CREATE TABLE IF NOT EXISTS `fields` (
@@ -52,26 +130,37 @@ CREATE TABLE IF NOT EXISTS `fields` (
   `postalcode` varchar(20) DEFAULT NULL,
   `city` varchar(255) DEFAULT NULL,
   `company` varchar(255) DEFAULT NULL,
+  `home_team_id` int(11) DEFAULT NULL,
   `field_owner_id` int(11) unsigned NOT NULL,
   `checkstate` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `fieldname` (`fieldname`),
   KEY `field_owner_id` (`field_owner_id`),
-  CONSTRAINT `fields_ibfk_1` FOREIGN KEY (`field_owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `idx_fields_home_team` (`home_team_id`),
+  CONSTRAINT `fields_ibfk_1` FOREIGN KEY (`field_owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_fields_home_team` FOREIGN KEY (`home_team_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Exportiere Daten aus Tabelle db_airsoftapp.fields: ~0 rows (ungefähr)
+-- Daten-Export vom Benutzer nicht ausgewählt
 
 -- Exportiere Struktur von Tabelle db_airsoftapp.groups
 CREATE TABLE IF NOT EXISTS `groups` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Exportiere Daten aus Tabelle db_airsoftapp.groups: ~1 rows (ungefähr)
-INSERT INTO `groups` (`id`, `name`) VALUES
-	(1, 'Racoons');
+-- Daten-Export vom Benutzer nicht ausgewählt
+
+-- Exportiere Struktur von Tabelle db_airsoftapp.ingameroles
+CREATE TABLE IF NOT EXISTS `ingameroles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+-- Daten-Export vom Benutzer nicht ausgewählt
 
 -- Exportiere Struktur von Tabelle db_airsoftapp.roles
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -81,10 +170,7 @@ CREATE TABLE IF NOT EXISTS `roles` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Exportiere Daten aus Tabelle db_airsoftapp.roles: ~2 rows (ungefähr)
-INSERT INTO `roles` (`id`, `name`) VALUES
-	(1, 'user'),
-	(2, 'Teamleader');
+-- Daten-Export vom Benutzer nicht ausgewählt
 
 -- Exportiere Struktur von Tabelle db_airsoftapp.users
 CREATE TABLE IF NOT EXISTS `users` (
@@ -99,15 +185,17 @@ CREATE TABLE IF NOT EXISTS `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `policy_accepted` tinyint(1) NOT NULL DEFAULT 0,
   `blocked` tinyint(1) NOT NULL DEFAULT 0,
+  `ingamerole_id` int(11) DEFAULT NULL,
+  `profile_image_url` varchar(255) DEFAULT NULL,
+  `force_password_change` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  UNIQUE KEY `email` (`email`),
+  KEY `fk_ingamerole` (`ingamerole_id`),
+  CONSTRAINT `fk_ingamerole` FOREIGN KEY (`ingamerole_id`) REFERENCES `ingameroles` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Exportiere Daten aus Tabelle db_airsoftapp.users: ~2 rows (ungefähr)
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `city`, `group_id`, `role`, `teamrole`, `created_at`, `policy_accepted`, `blocked`) VALUES
-	(1, 'Marvin Eilers', '$2y$10$2fAKtOMZulZ/w71t3CSlPO/0GNEqQKx4CdPm9r41wyRRcCcoNoCfm', 'larvineilers222@gmail.com', 'Chemnitz', 1, 'admin', 2, '2025-09-23 15:56:45', 0, 0),
-	(18, 'fe', '$2y$10$O1I4XwCOUkaqcx4/GANnIuvwxZZFJ9EA2bTNPzZccvzeBON3NLTwq', 'fe', 'fe', 1, 'user', 1, '2025-10-08 13:43:36', 1, 1);
+-- Daten-Export vom Benutzer nicht ausgewählt
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
