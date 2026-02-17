@@ -9,7 +9,7 @@ if ($fieldId === null) {
 }
 
 try {
-    $stmt = $pdo->prepare('SELECT id, field_id, title, start_at, end_at, description, status, created_at, location, location_lat, location_lng, scenario, organizer, min_age, required_gear, chrono_at, briefing_at, medic_contact FROM field_events WHERE field_id = :field_id ORDER BY start_at ASC');
+    $stmt = $pdo->prepare('SELECT id, field_id, title, start_at, end_at, description, status, created_at, location, location_street, location_house_number, location_postalcode, location_city, location_state, location_country, location_lat, location_lng, scenario, organizer, min_age, required_gear, chrono_at, briefing_at, medic_contact FROM field_events WHERE field_id = :field_id ORDER BY start_at ASC');
     $stmt->execute(['field_id' => (int)$fieldId]);
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

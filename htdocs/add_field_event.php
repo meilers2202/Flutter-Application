@@ -8,6 +8,12 @@ $startAt = trim($_POST['start_at'] ?? '');
 $endAt = trim($_POST['end_at'] ?? '');
 $description = trim($_POST['description'] ?? '');
 $location = trim($_POST['location'] ?? '');
+$locationStreet = trim($_POST['location_street'] ?? '');
+$locationHouseNumber = trim($_POST['location_house_number'] ?? '');
+$locationPostalcode = trim($_POST['location_postalcode'] ?? '');
+$locationCity = trim($_POST['location_city'] ?? '');
+$locationState = trim($_POST['location_state'] ?? '');
+$locationCountry = trim($_POST['location_country'] ?? '');
 $locationLat = trim($_POST['location_lat'] ?? '');
 $locationLng = trim($_POST['location_lng'] ?? '');
 $scenario = trim($_POST['scenario'] ?? '');
@@ -28,6 +34,11 @@ if (!$fieldId || $title === '' || $startAt === '' || $endAt === '' || $descripti
 
 if ($locationLat === '' || $locationLng === '') {
     echo json_encode(['success' => false, 'message' => 'Positionsdaten fehlen (location_lat, location_lng).']);
+    exit;
+}
+
+if ($locationStreet === '' || $locationHouseNumber === '' || $locationPostalcode === '' || $locationCity === '' || $locationCountry === '') {
+    echo json_encode(['success' => false, 'message' => 'Adressfelder fehlen (location_street, location_house_number, location_postalcode, location_city, location_country).']);
     exit;
 }
 
@@ -60,7 +71,18 @@ if ($powerLimitsJson !== null) {
 try {
     $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare('INSERT INTO field_events (field_id, title, start_at, end_at, description, status, location, location_lat, location_lng, scenario, organizer, min_age, required_gear, chrono_at, briefing_at, medic_contact) VALUES (:field_id, :title, :start_at, :end_at, :description, :status, :location, :location_lat, :location_lng, :scenario, :organizer, :min_age, :required_gear, :chrono_at, :briefing_at, :medic_contact)');
+    if ($location === '') {
+        $parts = [];
+        $line1 = trim($locationStreet . ' ' . $locationHouseNumber);
+        $line2 = trim($locationPostalcode . ' ' . $locationCity);
+        if ($line1 !== '') $parts[] = $line1;
+        if ($line2 !== '') $parts[] = $line2;
+        if ($locationState !== '') $parts[] = $locationState;
+        if ($locationCountry !== '') $parts[] = $locationCountry;
+        $location = implode(', ', $parts);
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO field_events (field_id, title, start_at, end_at, description, status, location, location_street, location_house_number, location_postalcode, location_city, location_state, location_country, location_lat, location_lng, scenario, organizer, min_age, required_gear, chrono_at, briefing_at, medic_contact) VALUES (:field_id, :title, :start_at, :end_at, :description, :status, :location, :location_street, :location_house_number, :location_postalcode, :location_city, :location_state, :location_country, :location_lat, :location_lng, :scenario, :organizer, :min_age, :required_gear, :chrono_at, :briefing_at, :medic_contact)');
     $ok = $stmt->execute([
         'field_id' => (int)$fieldId,
         'title' => $title,
@@ -69,6 +91,12 @@ try {
         'description' => $description,
         'status' => $status,
         'location' => $location !== '' ? $location : null,
+        'location_street' => $locationStreet,
+        'location_house_number' => $locationHouseNumber,
+        'location_postalcode' => $locationPostalcode,
+        'location_city' => $locationCity,
+        'location_state' => $locationState !== '' ? $locationState : null,
+        'location_country' => $locationCountry,
         'location_lat' => (float)$locationLat,
         'location_lng' => (float)$locationLng,
         'scenario' => $scenario,

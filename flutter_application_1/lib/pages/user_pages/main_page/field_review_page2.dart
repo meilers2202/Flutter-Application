@@ -404,6 +404,34 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
     return [raw.toString()];
   }
 
+  List<String> _buildEventAddressLines(Map<String, dynamic> event) {
+    final street = event['location_street']?.toString().trim() ?? '';
+    final houseNumber = event['location_house_number']?.toString().trim() ?? '';
+    final postalcode = event['location_postalcode']?.toString().trim() ?? '';
+    final city = event['location_city']?.toString().trim() ?? '';
+    final state = event['location_state']?.toString().trim() ?? '';
+    final country = event['location_country']?.toString().trim() ?? '';
+
+    final lines = <String>[];
+    final line1 = '$street $houseNumber'.trim();
+    final line2 = '$postalcode $city'.trim();
+    if (line1.isNotEmpty) lines.add(line1);
+    if (line2.isNotEmpty) lines.add(line2);
+    if (state.isNotEmpty) lines.add(state);
+    if (country.isNotEmpty) lines.add(country);
+
+    if (lines.isNotEmpty) return lines;
+
+    final fallback = event['location']?.toString().trim() ?? '';
+    if (fallback.isEmpty) return [];
+    return fallback
+        .replaceAll('\n', ',')
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+  }
+
   void _showImagePreview(String imageUrl) {
     showDialog(
       context: context,
@@ -460,7 +488,8 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
     final organizer = event['organizer']?.toString() ?? '';
     final minAge = event['min_age']?.toString() ?? '';
     final medicContact = event['medic_contact']?.toString() ?? '';
-    final address = event['location']?.toString() ?? '';
+
+    final addressLines = _buildEventAddressLines(event);
     final lat = event['location_lat']?.toString() ?? '';
     final lng = event['location_lng']?.toString() ?? '';
     final requiredGear = _parseRequiredGear(event['required_gear']);
@@ -477,34 +506,73 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_formatEventRangeShort(startAt, endAt)),
-                if (address.isNotEmpty) Text('Adresse: $address'),
-                if (lat.isNotEmpty || lng.isNotEmpty) Text('Koordinaten: $lat, $lng'),
+                if (addressLines.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text('Adresse:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  for (final line in addressLines) Text('- $line'),
+                ],
+                if (lat.isNotEmpty || lng.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text('Koordinaten: $lat, $lng'),
+                ],
+                const Divider(),
                 if (description.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text('Beschreibung: $description'),
+                  const Text('Beschreibung: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  for (final desc in description.split('\n'))
+                    Text('- $desc'),
                 ],
-                if (scenario.isNotEmpty) Text('Scenario: $scenario'),
-                if (organizer.isNotEmpty) Text('Veranstalter: $organizer'),
-                if (minAge.isNotEmpty) Text('Mindestalter: $minAge'),
+                const Divider(),
+                if (scenario.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text('Scenario: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('- $scenario'),
+                ],
+                const Divider(),
+                if (organizer.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text('Veranstalter: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('- $organizer'),
+                ],
+                const Divider(),
+                if (minAge.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      children: <TextSpan>[
+                        const TextSpan(text: 'Mindestalter: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: minAge),
+                      ],
+                    ),
+                  ),
+                ],
+                const Divider(),
                 if (requiredGear.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  const Text('Pflicht-Ausrustung:'),
-                  for (final gear in requiredGear) Text('- $gear'),
+                  const Text(
+                  'Pflicht-Ausrüstung:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  for (final gear in requiredGear)
+                  Text('- $gear'),
                 ],
+                const Divider(),
                 if (powerLimits.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  const Text('Joule/FPS Limits:'),
+                  const Text('Joule/FPS Limits:', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final limit in powerLimits)
                     Text(
+                      '${limit['type'] ?? ''} - '
                       '${limit['class_name'] ?? ''}: '
                       '${(limit['limit_value']?.toString().trim().isNotEmpty ?? false) ? limit['limit_value'] : '-'} '
-                      '| Abstand: ${limit['distance'] ?? ''} '
-                      '| Pflicht: ${limit['requirement'] ?? ''}',
+                      '\n      Abstand: ${limit['distance'] ?? ''} '
+                      '\n      Pflicht: ${limit['requirement'] ?? ''}',
                     ),
                 ],
+                const Divider(),
                 if (tickets.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  const Text('Tickets:'),
+                  const Text('Tickets:', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final ticket in tickets)
                     Text(
                       '${ticket['label'] ?? ''} - ${ticket['price'] ?? ''} ${ticket['currency'] ?? ''}',

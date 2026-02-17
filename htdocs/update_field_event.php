@@ -8,6 +8,12 @@ $startAt = trim($_POST['start_at'] ?? '');
 $endAt = trim($_POST['end_at'] ?? '');
 $description = trim($_POST['description'] ?? '');
 $location = trim($_POST['location'] ?? '');
+$locationStreet = trim($_POST['location_street'] ?? '');
+$locationHouseNumber = trim($_POST['location_house_number'] ?? '');
+$locationPostalcode = trim($_POST['location_postalcode'] ?? '');
+$locationCity = trim($_POST['location_city'] ?? '');
+$locationState = trim($_POST['location_state'] ?? '');
+$locationCountry = trim($_POST['location_country'] ?? '');
 $locationLat = trim($_POST['location_lat'] ?? '');
 $locationLng = trim($_POST['location_lng'] ?? '');
 $scenario = trim($_POST['scenario'] ?? '');
@@ -29,7 +35,18 @@ if (!$id || $title === '' || $startAt === '') {
 try {
     $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare('UPDATE field_events SET title = :title, start_at = :start_at, end_at = :end_at, description = :description, status = :status, location = :location, location_lat = :location_lat, location_lng = :location_lng, scenario = :scenario, organizer = :organizer, min_age = :min_age, required_gear = :required_gear, chrono_at = :chrono_at, briefing_at = :briefing_at, medic_contact = :medic_contact WHERE id = :id');
+    if ($location === '') {
+        $parts = [];
+        $line1 = trim($locationStreet . ' ' . $locationHouseNumber);
+        $line2 = trim($locationPostalcode . ' ' . $locationCity);
+        if ($line1 !== '') $parts[] = $line1;
+        if ($line2 !== '') $parts[] = $line2;
+        if ($locationState !== '') $parts[] = $locationState;
+        if ($locationCountry !== '') $parts[] = $locationCountry;
+        $location = implode(', ', $parts);
+    }
+
+    $stmt = $pdo->prepare('UPDATE field_events SET title = :title, start_at = :start_at, end_at = :end_at, description = :description, status = :status, location = :location, location_street = :location_street, location_house_number = :location_house_number, location_postalcode = :location_postalcode, location_city = :location_city, location_state = :location_state, location_country = :location_country, location_lat = :location_lat, location_lng = :location_lng, scenario = :scenario, organizer = :organizer, min_age = :min_age, required_gear = :required_gear, chrono_at = :chrono_at, briefing_at = :briefing_at, medic_contact = :medic_contact WHERE id = :id');
     $stmt->execute([
         'title' => $title,
         'start_at' => $startAt,
@@ -37,6 +54,12 @@ try {
         'description' => $description,
         'status' => $status ?: 'active',
         'location' => $location !== '' ? $location : null,
+        'location_street' => $locationStreet !== '' ? $locationStreet : null,
+        'location_house_number' => $locationHouseNumber !== '' ? $locationHouseNumber : null,
+        'location_postalcode' => $locationPostalcode !== '' ? $locationPostalcode : null,
+        'location_city' => $locationCity !== '' ? $locationCity : null,
+        'location_state' => $locationState !== '' ? $locationState : null,
+        'location_country' => $locationCountry !== '' ? $locationCountry : null,
         'location_lat' => $locationLat !== '' ? (float)$locationLat : null,
         'location_lng' => $locationLng !== '' ? (float)$locationLng : null,
         'scenario' => $scenario !== '' ? $scenario : null,

@@ -19,6 +19,21 @@ class FieldMapPage extends StatefulWidget {
 }
 
 class _FieldMapPageState extends State<FieldMapPage> {
+  static const List<Map<String, String>> _tileServers = [
+    {
+      'template': 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+      'probe': 'https://tile.openstreetmap.de/0/0/0.png',
+    },
+    {
+      'template': 'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      'probe': 'https://a.tile.openstreetmap.fr/hot/0/0/0.png',
+    },
+    {
+      'template': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      'probe': 'https://tile.openstreetmap.org/0/0/0.png',
+    },
+  ];
+
   final MapController _mapController = MapController();
   StreamSubscription<Position>? _positionSub;
   final Distance _distanceCalc = const Distance();
@@ -36,6 +51,9 @@ class _FieldMapPageState extends State<FieldMapPage> {
   double _currentZoom = 14.0;
   DateTime? _lastUiUpdate;
   DateTime? _lastCameraMove;
+  int _tileUrlIndex = 0;
+  bool _tileFallbackNotified = false;
+  bool _tileServerUnavailable = false;
 
   @override
   void initState() {
@@ -57,6 +75,8 @@ class _FieldMapPageState extends State<FieldMapPage> {
         if (mounted) setState(() => _isLoading = false);
         return;
       }
+
+      await _selectAvailableTileServer();
 
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       _currentLatLng = LatLng(position.latitude, position.longitude);
@@ -278,6 +298,51 @@ class _FieldMapPageState extends State<FieldMapPage> {
     return null;
   }
 
+  Future<void> _selectAvailableTileServer() async {
+    for (var i = 0; i < _tileServers.length; i++) {
+      final probeUrl = _tileServers[i]['probe'] ?? '';
+      if (probeUrl.isEmpty) continue;
+      try {
+        final resp = await http
+            .get(Uri.parse(probeUrl), headers: {'User-Agent': 'pewpew-connect/1.0'})
+            .timeout(const Duration(seconds: 3));
+        if (resp.statusCode >= 200 && resp.statusCode < 400) {
+          if (!mounted) return;
+          setState(() {
+            _tileUrlIndex = i;
+            _tileServerUnavailable = false;
+          });
+          return;
+        }
+      } catch (_) {
+        // try next server
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _tileServerUnavailable = true;
+    });
+    _showSnack('Keine Kartenserver erreichbar. Bitte Internet/DNS prüfen.');
+  }
+
+  void _handleTileLoadError() {
+    if (!mounted) return;
+    if (_tileUrlIndex < _tileServers.length - 1) {
+      setState(() => _tileUrlIndex++);
+      if (!_tileFallbackNotified) {
+        _tileFallbackNotified = true;
+        _showSnack('Kartenserver nicht erreichbar, alternativer Server wird verwendet.');
+      }
+      return;
+    }
+
+    if (!_tileFallbackNotified) {
+      _tileFallbackNotified = true;
+      _showSnack('Kartenkacheln konnten nicht geladen werden. Bitte Internet/DNS prüfen.');
+    }
+  }
+
   String _formatDistance(num meters) {
     if (meters < 1000) return '${meters.round()} m';
     final km = meters / 1000.0;
@@ -417,13 +482,15 @@ class _FieldMapPageState extends State<FieldMapPage> {
               },
             ),
             children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.pewpew.connect',
-                minZoom: 5,
-                maxZoom: 19,
-                keepBuffer: 2,
-              ),
+              if (!_tileServerUnavailable)
+                TileLayer(
+                  urlTemplate: _tileServers[_tileUrlIndex]['template']!,
+                  userAgentPackageName: 'com.pewpew.connect',
+                  minZoom: 5,
+                  maxZoom: 19,
+                  keepBuffer: 2,
+                  errorTileCallback: (_, __, ___) => _handleTileLoadError(),
+                ),
               if (current != null && accuracy != null)
                 CircleLayer(
                   circles: [

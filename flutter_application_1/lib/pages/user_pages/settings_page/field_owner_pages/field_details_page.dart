@@ -694,6 +694,52 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     return [raw.toString()];
   }
 
+  String _composeEventLocation({
+    required String street,
+    required String houseNumber,
+    required String postalcode,
+    required String city,
+    required String state,
+    required String country,
+  }) {
+    final parts = <String>[];
+    final line1 = '$street $houseNumber'.trim();
+    final line2 = '$postalcode $city'.trim();
+    if (line1.isNotEmpty) parts.add(line1);
+    if (line2.isNotEmpty) parts.add(line2);
+    if (state.trim().isNotEmpty) parts.add(state.trim());
+    if (country.trim().isNotEmpty) parts.add(country.trim());
+    return parts.join(', ');
+  }
+
+  List<String> _buildEventAddressLines(Map<String, dynamic> event) {
+    final street = event['location_street']?.toString().trim() ?? '';
+    final houseNumber = event['location_house_number']?.toString().trim() ?? '';
+    final postalcode = event['location_postalcode']?.toString().trim() ?? '';
+    final city = event['location_city']?.toString().trim() ?? '';
+    final state = event['location_state']?.toString().trim() ?? '';
+    final country = event['location_country']?.toString().trim() ?? '';
+
+    final lines = <String>[];
+    final line1 = '$street $houseNumber'.trim();
+    final line2 = '$postalcode $city'.trim();
+    if (line1.isNotEmpty) lines.add(line1);
+    if (line2.isNotEmpty) lines.add(line2);
+    if (state.isNotEmpty) lines.add(state);
+    if (country.isNotEmpty) lines.add(country);
+
+    if (lines.isNotEmpty) return lines;
+
+    final fallback = event['location']?.toString().trim() ?? '';
+    if (fallback.isEmpty) return [];
+    return fallback
+        .replaceAll('\n', ',')
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+  }
+
   String _formatLatLng(LatLng value) {
     final lat = value.latitude.toStringAsFixed(5);
     final lng = value.longitude.toStringAsFixed(5);
@@ -738,7 +784,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     required List<_PowerLimitInput> powerLimits,
     required List<_TicketInput> tickets,
     required LatLng location,
-    String? locationAddress,
+    required String locationStreet,
+    required String locationHouseNumber,
+    required String locationPostalcode,
+    required String locationCity,
+    required String locationState,
+    required String locationCountry,
   }) async {
     final url = Uri.parse('$ipAddress/add_field_event.php');
     try {
@@ -746,7 +797,20 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
         'field_id': widget.field.id.toString(),
         'title': title,
         'description': description,
-        'location': locationAddress?.trim() ?? '',
+        'location': _composeEventLocation(
+          street: locationStreet,
+          houseNumber: locationHouseNumber,
+          postalcode: locationPostalcode,
+          city: locationCity,
+          state: locationState,
+          country: locationCountry,
+        ),
+        'location_street': locationStreet.trim(),
+        'location_house_number': locationHouseNumber.trim(),
+        'location_postalcode': locationPostalcode.trim(),
+        'location_city': locationCity.trim(),
+        'location_state': locationState.trim(),
+        'location_country': locationCountry.trim(),
         'location_lat': location.latitude.toString(),
         'location_lng': location.longitude.toString(),
         'scenario': scenario,
@@ -806,7 +870,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     required List<_PowerLimitInput> powerLimits,
     required List<_TicketInput> tickets,
     required LatLng location,
-    String? locationAddress,
+    required String locationStreet,
+    required String locationHouseNumber,
+    required String locationPostalcode,
+    required String locationCity,
+    required String locationState,
+    required String locationCountry,
   }) async {
     final url = Uri.parse('$ipAddress/update_field_event.php');
     try {
@@ -814,7 +883,20 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
         'id': id.toString(),
         'title': title,
         'description': description,
-        'location': locationAddress?.trim() ?? '',
+        'location': _composeEventLocation(
+          street: locationStreet,
+          houseNumber: locationHouseNumber,
+          postalcode: locationPostalcode,
+          city: locationCity,
+          state: locationState,
+          country: locationCountry,
+        ),
+        'location_street': locationStreet.trim(),
+        'location_house_number': locationHouseNumber.trim(),
+        'location_postalcode': locationPostalcode.trim(),
+        'location_city': locationCity.trim(),
+        'location_state': locationState.trim(),
+        'location_country': locationCountry.trim(),
         'location_lat': location.latitude.toString(),
         'location_lng': location.longitude.toString(),
         'scenario': scenario,
@@ -897,7 +979,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     final organizer = event['organizer']?.toString() ?? '';
     final minAge = event['min_age']?.toString() ?? '';
     final medicContact = event['medic_contact']?.toString() ?? '';
-    final address = event['location']?.toString() ?? '';
+    final addressLines = _buildEventAddressLines(event);
     final lat = event['location_lat']?.toString() ?? '';
     final lng = event['location_lng']?.toString() ?? '';
     final requiredGear = _parseRequiredGear(event['required_gear']);
@@ -914,7 +996,11 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_formatEventRangeShort(startAt, endAt)),
-                if (address.isNotEmpty) Text('Adresse: $address'),
+                if (addressLines.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text('Adresse:'),
+                  for (final line in addressLines) Text('- $line'),
+                ],
                 if (lat.isNotEmpty || lng.isNotEmpty) Text('Koordinaten: $lat, $lng'),
                 if (description.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -1396,7 +1482,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
-    final locationAddressController = TextEditingController();
+    final locationStreetController = TextEditingController();
+    final locationHouseNumberController = TextEditingController();
+    final locationPostalcodeController = TextEditingController();
+    final locationCityController = TextEditingController();
+    final locationStateController = TextEditingController();
+    final locationCountryController = TextEditingController();
     final scenarioController = TextEditingController();
     final organizerController = TextEditingController();
     final minAgeController = TextEditingController();
@@ -1463,9 +1554,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                               if (picked != null) {
                                 setState(() {
                                   locationLatLng = picked.location;
-                                  if (picked.address?.trim().isNotEmpty == true) {
-                                    locationAddressController.text = picked.address!.trim();
-                                  }
+                                  locationStreetController.text = picked.street;
+                                  locationHouseNumberController.text = picked.houseNumber;
+                                  locationPostalcodeController.text = picked.postalcode;
+                                  locationCityController.text = picked.city;
+                                  locationStateController.text = picked.state;
+                                  locationCountryController.text = picked.country;
                                 });
                               }
                             },
@@ -1475,8 +1569,42 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                         ],
                       ),
                       TextFormField(
-                        controller: locationAddressController,
-                        decoration: const InputDecoration(labelText: 'Adresse (optional)'),
+                        controller: locationStreetController,
+                        decoration: const InputDecoration(labelText: 'Strasse'),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Strasse erforderlich' : null,
+                      ),
+                      TextFormField(
+                        controller: locationHouseNumberController,
+                        decoration: const InputDecoration(labelText: 'Hausnummer'),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Hausnummer erforderlich' : null,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: locationPostalcodeController,
+                              decoration: const InputDecoration(labelText: 'PLZ'),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'PLZ erforderlich' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              controller: locationCityController,
+                              decoration: const InputDecoration(labelText: 'Ort'),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Ort erforderlich' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextFormField(
+                        controller: locationStateController,
+                        decoration: const InputDecoration(labelText: 'Bundesland/Region (optional)'),
+                      ),
+                      TextFormField(
+                        controller: locationCountryController,
+                        decoration: const InputDecoration(labelText: 'Land'),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Land erforderlich' : null,
                       ),
                       TextFormField(
                         controller: scenarioController,
@@ -1791,7 +1919,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                       powerLimits: powerLimits,
                       tickets: tickets,
                       location: locationLatLng!,
-                      locationAddress: locationAddressController.text.trim(),
+                      locationStreet: locationStreetController.text.trim(),
+                      locationHouseNumber: locationHouseNumberController.text.trim(),
+                      locationPostalcode: locationPostalcodeController.text.trim(),
+                      locationCity: locationCityController.text.trim(),
+                      locationState: locationStateController.text.trim(),
+                      locationCountry: locationCountryController.text.trim(),
                     );
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 41, 107, 43)),
@@ -1809,7 +1942,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController(text: event['title']?.toString() ?? '');
     final descriptionController = TextEditingController(text: event['description']?.toString() ?? '');
-    final locationAddressController = TextEditingController(text: event['location']?.toString() ?? '');
+    final locationStreetController = TextEditingController(text: event['location_street']?.toString() ?? '');
+    final locationHouseNumberController = TextEditingController(text: event['location_house_number']?.toString() ?? '');
+    final locationPostalcodeController = TextEditingController(text: event['location_postalcode']?.toString() ?? '');
+    final locationCityController = TextEditingController(text: event['location_city']?.toString() ?? '');
+    final locationStateController = TextEditingController(text: event['location_state']?.toString() ?? '');
+    final locationCountryController = TextEditingController(text: event['location_country']?.toString() ?? '');
     final scenarioController = TextEditingController(text: event['scenario']?.toString() ?? '');
     final organizerController = TextEditingController(text: event['organizer']?.toString() ?? '');
     final minAgeController = TextEditingController(text: event['min_age']?.toString() ?? '');
@@ -1908,9 +2046,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                               if (picked != null) {
                                 setState(() {
                                   locationLatLng = picked.location;
-                                  if (picked.address?.trim().isNotEmpty == true) {
-                                    locationAddressController.text = picked.address!.trim();
-                                  }
+                                  locationStreetController.text = picked.street;
+                                  locationHouseNumberController.text = picked.houseNumber;
+                                  locationPostalcodeController.text = picked.postalcode;
+                                  locationCityController.text = picked.city;
+                                  locationStateController.text = picked.state;
+                                  locationCountryController.text = picked.country;
                                 });
                               }
                             },
@@ -1920,8 +2061,42 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                         ],
                       ),
                       TextFormField(
-                        controller: locationAddressController,
-                        decoration: const InputDecoration(labelText: 'Adresse (optional)'),
+                        controller: locationStreetController,
+                        decoration: const InputDecoration(labelText: 'Strasse'),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Strasse erforderlich' : null,
+                      ),
+                      TextFormField(
+                        controller: locationHouseNumberController,
+                        decoration: const InputDecoration(labelText: 'Hausnummer'),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Hausnummer erforderlich' : null,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: locationPostalcodeController,
+                              decoration: const InputDecoration(labelText: 'PLZ'),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'PLZ erforderlich' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              controller: locationCityController,
+                              decoration: const InputDecoration(labelText: 'Ort'),
+                              validator: (value) => value == null || value.trim().isEmpty ? 'Ort erforderlich' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextFormField(
+                        controller: locationStateController,
+                        decoration: const InputDecoration(labelText: 'Bundesland/Region (optional)'),
+                      ),
+                      TextFormField(
+                        controller: locationCountryController,
+                        decoration: const InputDecoration(labelText: 'Land'),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Land erforderlich' : null,
                       ),
                       TextFormField(
                         controller: scenarioController,
@@ -2237,7 +2412,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                       powerLimits: powerLimits,
                       tickets: tickets,
                       location: locationLatLng!,
-                      locationAddress: locationAddressController.text.trim(),
+                      locationStreet: locationStreetController.text.trim(),
+                      locationHouseNumber: locationHouseNumberController.text.trim(),
+                      locationPostalcode: locationPostalcodeController.text.trim(),
+                      locationCity: locationCityController.text.trim(),
+                      locationState: locationStateController.text.trim(),
+                      locationCountry: locationCountryController.text.trim(),
                     );
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 41, 107, 43)),
@@ -2255,10 +2435,22 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
 class _EventLocationResult {
   final LatLng location;
   final String? address;
+  final String street;
+  final String houseNumber;
+  final String postalcode;
+  final String city;
+  final String state;
+  final String country;
 
   const _EventLocationResult({
     required this.location,
     this.address,
+    this.street = '',
+    this.houseNumber = '',
+    this.postalcode = '',
+    this.city = '',
+    this.state = '',
+    this.country = '',
   });
 }
 
@@ -2274,11 +2466,35 @@ class _EventLocationPickerPage extends StatefulWidget {
 }
 
 class _EventLocationPickerPageState extends State<_EventLocationPickerPage> {
+  static const List<Map<String, String>> _tileServers = [
+    {
+      'template': 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+      'probe': 'https://tile.openstreetmap.de/0/0/0.png',
+    },
+    {
+      'template': 'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      'probe': 'https://a.tile.openstreetmap.fr/hot/0/0/0.png',
+    },
+    {
+      'template': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      'probe': 'https://tile.openstreetmap.org/0/0/0.png',
+    },
+  ];
+
   final MapController _mapController = MapController();
   LatLng? _selected;
   String? _selectedAddress;
+  String _street = '';
+  String _houseNumber = '';
+  String _postalcode = '';
+  String _city = '';
+  String _state = '';
+  String _country = '';
   bool _isResolvingAddress = false;
   bool _isLoading = true;
+  int _tileUrlIndex = 0;
+  bool _tileFallbackNotified = false;
+  bool _tileServerUnavailable = false;
 
   @override
   void initState() {
@@ -2306,6 +2522,8 @@ class _EventLocationPickerPageState extends State<_EventLocationPickerPage> {
         }
       }
     }
+
+    await _selectAvailableTileServer();
 
     if (!mounted) return;
     setState(() {
@@ -2354,6 +2572,51 @@ class _EventLocationPickerPageState extends State<_EventLocationPickerPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _handleTileLoadError() {
+    if (!mounted) return;
+    if (_tileUrlIndex < _tileServers.length - 1) {
+      setState(() => _tileUrlIndex++);
+      if (!_tileFallbackNotified) {
+        _tileFallbackNotified = true;
+        _showSnack('Kartenserver nicht erreichbar, alternativer Server wird verwendet.');
+      }
+      return;
+    }
+
+    if (!_tileFallbackNotified) {
+      _tileFallbackNotified = true;
+      _showSnack('Kartenkacheln konnten nicht geladen werden. Bitte Internet/DNS prüfen.');
+    }
+  }
+
+  Future<void> _selectAvailableTileServer() async {
+    for (var i = 0; i < _tileServers.length; i++) {
+      final probeUrl = _tileServers[i]['probe'] ?? '';
+      if (probeUrl.isEmpty) continue;
+      try {
+        final resp = await http
+            .get(Uri.parse(probeUrl), headers: {'User-Agent': 'pewpew-connect/1.0'})
+            .timeout(const Duration(seconds: 3));
+        if (resp.statusCode >= 200 && resp.statusCode < 400) {
+          if (!mounted) return;
+          setState(() {
+            _tileUrlIndex = i;
+            _tileServerUnavailable = false;
+          });
+          return;
+        }
+      } catch (_) {
+        // try next server
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _tileServerUnavailable = true;
+    });
+    _showSnack('Keine Kartenserver erreichbar. Bitte Internet/DNS prüfen.');
+  }
+
   Future<void> _resolveAddress(LatLng location) async {
     setState(() => _isResolvingAddress = true);
     try {
@@ -2364,12 +2627,27 @@ class _EventLocationPickerPageState extends State<_EventLocationPickerPage> {
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body) as Map<String, dynamic>;
         final address = data['display_name']?.toString();
+        final rawAddress = data['address'];
+        final addressMap = rawAddress is Map ? rawAddress.cast<String, dynamic>() : <String, dynamic>{};
+        final cityValue = (addressMap['city'] ?? addressMap['town'] ?? addressMap['village'] ?? addressMap['municipality'])?.toString() ?? '';
         if (mounted) {
-          setState(() => _selectedAddress = address);
+          setState(() {
+            _selectedAddress = address;
+            _street = (addressMap['road'] ?? addressMap['pedestrian'] ?? addressMap['footway'] ?? '').toString();
+            _houseNumber = (addressMap['house_number'] ?? '').toString();
+            _postalcode = (addressMap['postcode'] ?? '').toString();
+            _city = cityValue;
+            _state = (addressMap['state'] ?? '').toString();
+            _country = (addressMap['country'] ?? '').toString();
+          });
         }
       }
     } catch (_) {
-      // ignore, keep last address
+      if (mounted) {
+        setState(() {
+          _selectedAddress = 'Keine Adresse gefunden (offline/Netzwerkfehler).';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() => _isResolvingAddress = false);
@@ -2404,7 +2682,16 @@ class _EventLocationPickerPageState extends State<_EventLocationPickerPage> {
             onPressed: selected == null
                 ? null
                 : () => Navigator.of(context).pop(
-                      _EventLocationResult(location: selected, address: _selectedAddress),
+                      _EventLocationResult(
+                        location: selected,
+                        address: _selectedAddress,
+                        street: _street,
+                        houseNumber: _houseNumber,
+                        postalcode: _postalcode,
+                        city: _city,
+                        state: _state,
+                        country: _country,
+                      ),
                     ),
             child: const Text('Speichern', style: TextStyle(color: Colors.white)),
           ),
@@ -2427,13 +2714,15 @@ class _EventLocationPickerPageState extends State<_EventLocationPickerPage> {
                     },
                   ),
                   children: [
-                    TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.pewpew.connect',
-                      minZoom: 5,
-                      maxZoom: 19,
-                      keepBuffer: 2,
-                    ),
+                    if (!_tileServerUnavailable)
+                      TileLayer(
+                        urlTemplate: _tileServers[_tileUrlIndex]['template']!,
+                        userAgentPackageName: 'com.pewpew.connect',
+                        minZoom: 5,
+                        maxZoom: 19,
+                        keepBuffer: 2,
+                        errorTileCallback: (_, __, ___) => _handleTileLoadError(),
+                      ),
                     if (selected != null)
                       MarkerLayer(
                         markers: [
