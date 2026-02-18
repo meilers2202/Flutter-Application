@@ -23,3 +23,21 @@ Dieses Dokument protokolliert die durchgeführten Arbeitsschritte im Projekt.
 Ab jetzt wird jeder neue Arbeitsschritt hier fortlaufend ergänzt.
 Temporäre Änderungen (z. B. eingefügte Funktionen, die später wieder entfernt wurden) werden nicht dokumentiert; protokolliert werden nur finale, im aktuellen Stand vorhandene Änderungen.
 Debugging-Schritte und reine Debug-Ausgaben werden nicht in dieses Protokoll aufgenommen.
+
+## Android Update-Fix (ohne Deinstallation)
+
+Damit Android eine neue APK als Update über die bestehende App installiert, müssen **beide** Bedingungen erfüllt sein:
+
+1. Gleiche `applicationId` (hier: `com.pewpew.connect`) und **derselbe Keystore** für alle Release-Builds.
+2. Bei jedem Release ein **höherer `versionCode`**.
+
+### Einmalig einrichten
+
+1. `android/key.properties.example` nach `android/key.properties` kopieren.
+2. Werte in `android/key.properties` mit eurem echten Upload-Keystore füllen.
+3. Keystore-Datei sicher aufbewahren (Backup); ohne diesen Key sind spätere Updates nicht möglich.
+
+### Für jedes neue Release
+
+1. `pubspec.yaml` erhöhen: `version: x.y.z+buildNumber` (die Zahl hinter `+` muss steigen).
+2. `flutter build apk --release` (oder `flutter build appbundle --release`) mit derselben Signatur erzeugen.
