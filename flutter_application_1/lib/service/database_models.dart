@@ -4,8 +4,8 @@ class User {
   final String email;
   final String? city;
   final int? groupId;
-  final String role; // 'admin', 'user', etc.
-  final int? teamRole; // Verweist auf roles.id (z.B. Teamleader)
+  final String role;
+  final int? teamRole;
   final DateTime createdAt;
   final bool policyAccepted;
 
@@ -48,8 +48,8 @@ class Field {
   final String? company;
   final int? homeTeamId;
   final String? homeTeamName;
-  final int fieldOwnerId; // Verweist auf users.id
-  final int checkstate; // Verweist auf checkstate.id
+  final int fieldOwnerId;
+  final int checkstate;
 
   Field({
     required this.id,

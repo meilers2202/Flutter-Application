@@ -26,7 +26,6 @@ class RemoteConfigService {
       _keyMinAppVersion: '0.0.0',
     });
     _initialized = true;
-    // Fetch in background
     remote.fetchAndActivate();
   }
 

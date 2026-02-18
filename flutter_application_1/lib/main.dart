@@ -58,7 +58,6 @@ class _MyAppState extends State<MyApp> {
     if (_prompted) return;
     _prompted = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Use the Navigator overlay context so MaterialLocalizations are available.
       final navContext = NavigationService.navigatorKey.currentState?.overlay?.context;
       if (navContext == null) {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -86,7 +85,6 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: NavigationService.navigatorKey,
@@ -114,7 +112,6 @@ class _MyAppState extends State<MyApp> {
           iconTheme: IconThemeData(color: Colors.white)
         ),
       ),
-      
       home: appState.isAutoLoggedIn 
           ? MainPage(
               toggleTheme: appState.toggleTheme,
@@ -127,7 +124,6 @@ class _MyAppState extends State<MyApp> {
               toggleTheme: appState.toggleTheme,
               setUserData: appState.setUserData,
             ),
-
       routes: {
         '/login': (context) => WelcomePage(
               toggleTheme: appState.toggleTheme,
@@ -147,13 +143,11 @@ class _MyAppState extends State<MyApp> {
             ),
         '/settings': (context) => SettingsPage(toggleTheme: appState.toggleTheme),
         '/admin': (context) => const AdminPage(),
-        // Admin subpages
         '/admin/users': (context) => const UserManagementPage(),
         '/admin/fieldowners': (context) => const FieldOwnerList(),
         '/admin/fields': (context) => const FieldList(),
         '/admin/blocklist': (context) => const BlocklistPage(),
         '/admin/teams': (context) => const TeamsManagementPage(),
-        // General pages
         '/allTeams': (context) => const AllTeams(),
         '/fieldslist': (context) => const FieldListPage(),
         '/teamDetails': (context) {
@@ -198,7 +192,6 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
-
   static Widget _errorPage(String message) {
     return Scaffold(
       appBar: AppBar(title: const Text("Fehler")),

@@ -25,7 +25,6 @@ class UserService {
     }
   }
 
-  // Erstellt ein neues Team
   Future<Map<String, dynamic>> createTeam(String teamName, String username) async {
     final url = Uri.parse('$ipAddress/add_team.php');
     try {
@@ -42,7 +41,6 @@ class UserService {
     }
   }
 
-  // Holt die Mitglieder eines Teams
   Future<Map<String, dynamic>> fetchTeamMembers(String teamName) async {
     final url = Uri.parse('$ipAddress/get_team_members.php');
     try {

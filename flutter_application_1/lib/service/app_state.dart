@@ -13,7 +13,6 @@ class AppState extends ChangeNotifier {
   AppState(this.prefs) : 
     _themeMode = (prefs.getBool('isDarkMode') ?? false) ? ThemeMode.dark : ThemeMode.light {
     
-    // Logik beim Kaltstart der App:
     final bool stayLoggedIn = prefs.getBool('stayLoggedIn') ?? false;
 
     if (stayLoggedIn) {
@@ -23,8 +22,6 @@ class AppState extends ChangeNotifier {
       _teamrole = prefs.getString('teamrole');
       _forcePasswordChange = prefs.getBool('forcePasswordChange') ?? false;
     } else {
-      // Wenn der Haken nicht gesetzt war (oder explizit auf false steht), 
-      // starten wir immer als Gast ohne Daten.
       _username = null;
       _team = null;
       _role = null;
@@ -67,8 +64,8 @@ class AppState extends ChangeNotifier {
   }) {
     _username = username;
     _team = team;
-    _role = role;
-    _teamrole = teamrole;
+    if (role != null) _role = role;
+    if (teamrole != null) _teamrole = teamrole;
     _forcePasswordChange = forcePasswordChange;
 
     // Speicher-Entscheidung:

@@ -119,7 +119,6 @@ class NotificationService {
       final data = jsonDecode(payload) as Map<String, dynamic>;
       await _handleMessageData(data);
     } catch (_) {
-      // ignore invalid payload
     }
   }
 

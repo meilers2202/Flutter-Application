@@ -33,7 +33,7 @@ try {
     $pdo->beginTransaction();
 
     // Entferne Leader-Rolle vom aktuellen Leader
-    $pdo->prepare("UPDATE users SET teamrole = NULL WHERE username = :leader")->execute(['leader' => $leader]);
+    $pdo->prepare("UPDATE users SET teamrole = 1 WHERE username = :leader")->execute(['leader' => $leader]);
     // Setze Leader-Rolle beim neuen Leader
     $pdo->prepare("UPDATE users SET teamrole = :leaderRole WHERE username = :newLeader")->execute(['leaderRole' => 2, 'newLeader' => $newLeader]);
 

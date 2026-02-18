@@ -37,7 +37,6 @@ export 'package:flutter_local_notifications/flutter_local_notifications.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/profile_page.dart';
 export 'package:pewpew_connect/pages/user_pages/main_page/user_profile_page.dart';
-export 'package:pewpew_connect/pages/user_pages/main_page/team_details_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/settings_page.dart';
 export 'package:pewpew_connect/pages/user_pages/main_page/field_review_page2.dart';
 export 'package:pewpew_connect/pages/user_pages/main_page/field_map_page.dart';
@@ -53,6 +52,7 @@ export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/field_review_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/team_members_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/create_field.dart';
+export 'package:pewpew_connect/pages/user_pages/main_page/team_details_page/team_details_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/user_management_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/admin_pages/teams_management_page.dart';
 export 'package:pewpew_connect/pages/user_pages/settings_page/field_owner_pages/edit_field_page.dart';

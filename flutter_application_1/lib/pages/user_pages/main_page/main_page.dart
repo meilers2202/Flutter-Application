@@ -150,8 +150,8 @@ class MainPageState extends State<MainPage> with RouteAware {
         _userCity = userData['city'];
         _userTeam = userData['team'];
         _userMemberSince = userData['memberSince'];
-        _teamrole = userData['teamrole'] ?? 'member';
-        _userRole = userData['role'];
+        _teamrole = userData['teamrole']?.toString() ?? '1';
+        _userRole = userData['role']?.toString();
         _isLoading = false;
       });
     } else {
@@ -185,6 +185,9 @@ class MainPageState extends State<MainPage> with RouteAware {
   }
 
   Future<void> _fetchTeamMembersAndNavigate() async {
+    await fetchProfileData();
+    if (!mounted) return;
+
     if (_userTeam == null || _userTeam!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Du bist keinem Team zugeordnet.')));
       return;

@@ -33,107 +33,84 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
   }
 
   Future<void> _fetchEvents() async {
-    final url = Uri.parse('$ipAddress/get_field_events.php');
-    try {
-      final response = await http.post(url, body: {'field_id': _currentField.id.toString()});
-      if (response.body.trim().isEmpty) {
-        setState(() {
-          _eventsLoading = false;
-          _eventsError = 'Leere Server-Antwort (get_field_events.php).';
-        });
-        return;
-      }
-
-      final Map<String, dynamic> data = json.decode(response.body);
-      if (data['success'] == true) {
-        final rawEvents = (data['events'] as List?) ?? [];
-        setState(() {
-          _events = rawEvents.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-          _eventsLoading = false;
-          _eventsError = null;
-        });
-      } else {
-        setState(() {
-          _eventsLoading = false;
-          _eventsError = data['message']?.toString();
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _eventsLoading = false;
-        _eventsError = e.toString();
-      });
-    }
+    await _fetchDataAndUpdate(
+      endpoint: 'get_field_events.php',
+      dataKey: 'events',
+      onSuccess: (data) => _events = data,
+      setLoading: (value) => _eventsLoading = value,
+      setError: (value) => _eventsError = value,
+    );
   }
 
   Future<void> _fetchImages() async {
-    final url = Uri.parse('$ipAddress/get_field_images.php');
-    try {
-      final response = await http.post(url, body: {'field_id': _currentField.id.toString()});
-      if (response.body.trim().isEmpty) {
-        setState(() {
-          _imagesLoading = false;
-          _imagesError = 'Leere Server-Antwort (get_field_images.php).';
-        });
-        return;
-      }
-
-      final Map<String, dynamic> data = json.decode(response.body);
-      if (data['success'] == true) {
-        final rawImages = (data['images'] as List?) ?? [];
-        setState(() {
-          _images = rawImages.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-          _imagesLoading = false;
-          _imagesError = null;
-        });
-      } else {
-        setState(() {
-          _imagesLoading = false;
-          _imagesError = data['message']?.toString();
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _imagesLoading = false;
-        _imagesError = e.toString();
-      });
-    }
+    await _fetchDataAndUpdate(
+      endpoint: 'get_field_images.php',
+      dataKey: 'images',
+      onSuccess: (data) => _images = data,
+      setLoading: (value) => _imagesLoading = value,
+      setError: (value) => _imagesError = value,
+    );
   }
 
   Future<void> _fetchPricing() async {
-    final url = Uri.parse('$ipAddress/get_field_pricing.php');
+    await _fetchDataAndUpdate(
+      endpoint: 'get_field_pricing.php',
+      dataKey: 'packages',
+      onSuccess: (data) => _pricingPackages = data,
+      setLoading: (value) => _pricingLoading = value,
+      setError: (value) => _pricingError = value,
+    );
+  }
+
+  Future<void> _fetchDataAndUpdate({
+    required String endpoint,
+    required String dataKey,
+    required Function(List<Map<String, dynamic>>) onSuccess,
+    required Function(bool) setLoading,
+    required Function(String?) setError,
+  }) async {
+    await _fetchData(
+      endpoint: endpoint,
+      dataKey: dataKey,
+      onSuccess: (data) {
+        onSuccess(data);
+        setLoading(false);
+        setError(null);
+      },
+      onError: (error) {
+        setLoading(false);
+        setError(error);
+      },
+    );
+  }
+
+  Future<void> _fetchData({
+    required String endpoint,
+    required String dataKey,
+    required Function(List<Map<String, dynamic>>) onSuccess,
+    required Function(String) onError,
+  }) async {
+    final url = Uri.parse('$ipAddress/$endpoint');
     try {
       final response = await http.post(url, body: {'field_id': _currentField.id.toString()});
       if (response.body.trim().isEmpty) {
-        setState(() {
-          _pricingLoading = false;
-          _pricingError = 'Leere Server-Antwort (get_field_pricing.php).';
-        });
+        if (!mounted) return;
+        setState(() => onError('Leere Server-Antwort ($endpoint).'));
         return;
       }
 
       final Map<String, dynamic> data = json.decode(response.body);
       if (data['success'] == true) {
-        final raw = (data['packages'] as List?) ?? [];
-        setState(() {
-          _pricingPackages = raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-          _pricingLoading = false;
-          _pricingError = null;
-        });
+        final rawData = (data[dataKey] as List?) ?? [];
+        if (!mounted) return;
+        setState(() => onSuccess(rawData.map((e) => Map<String, dynamic>.from(e as Map)).toList()));
       } else {
-        setState(() {
-          _pricingLoading = false;
-          _pricingError = data['message']?.toString();
-        });
+        if (!mounted) return;
+        setState(() => onError(data['message']?.toString() ?? 'Fehler'));
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _pricingLoading = false;
-        _pricingError = e.toString();
-      });
+      setState(() => onError(e.toString()));
     }
   }
 
@@ -412,24 +389,38 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
     final state = event['location_state']?.toString().trim() ?? '';
     final country = event['location_country']?.toString().trim() ?? '';
 
+    String joinPair(String first, String second) {
+      if (first.isNotEmpty && second.isNotEmpty) return '$first, $second';
+      return first.isNotEmpty ? first : second;
+    }
+
     final lines = <String>[];
     final line1 = '$street $houseNumber'.trim();
     final line2 = '$postalcode $city'.trim();
-    if (line1.isNotEmpty) lines.add(line1);
-    if (line2.isNotEmpty) lines.add(line2);
-    if (state.isNotEmpty) lines.add(state);
-    if (country.isNotEmpty) lines.add(country);
+    final firstCombined = joinPair(line1, line2);
+    final secondCombined = joinPair(state, country);
+
+    if (firstCombined.isNotEmpty) lines.add(firstCombined);
+    if (secondCombined.isNotEmpty) lines.add(secondCombined);
 
     if (lines.isNotEmpty) return lines;
 
     final fallback = event['location']?.toString().trim() ?? '';
     if (fallback.isEmpty) return [];
-    return fallback
+    final parts = fallback
         .replaceAll('\n', ',')
         .split(',')
         .map((part) => part.trim())
         .where((part) => part.isNotEmpty)
         .toList();
+
+    final grouped = <String>[];
+    for (var index = 0; index < parts.length; index += 2) {
+      final first = parts[index];
+      final second = (index + 1) < parts.length ? parts[index + 1] : '';
+      grouped.add(joinPair(first, second));
+    }
+    return grouped.where((line) => line.isNotEmpty).toList();
   }
 
   void _showImagePreview(String imageUrl) {
@@ -490,8 +481,6 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
     final medicContact = event['medic_contact']?.toString() ?? '';
 
     final addressLines = _buildEventAddressLines(event);
-    final lat = event['location_lat']?.toString() ?? '';
-    final lng = event['location_lng']?.toString() ?? '';
     final requiredGear = _parseRequiredGear(event['required_gear']);
     final powerLimits = (event['power_limits'] as List?) ?? [];
     final tickets = (event['tickets'] as List?) ?? [];
@@ -511,43 +500,43 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
                   const Text('Adresse:', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final line in addressLines) Text('- $line'),
                 ],
-                if (lat.isNotEmpty || lng.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text('Koordinaten: $lat, $lng'),
-                ],
-                const Divider(),
                 if (description.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   const Text('Beschreibung: ', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final desc in description.split('\n'))
                     Text('- $desc'),
                 ],
-                const Divider(),
                 if (scenario.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   const Text('Scenario: ', style: TextStyle(fontWeight: FontWeight.bold)),
                   Text('- $scenario'),
                 ],
-                const Divider(),
                 if (organizer.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   const Text('Veranstalter: ', style: TextStyle(fontWeight: FontWeight.bold)),
                   Text('- $organizer'),
                 ],
-                const Divider(),
                 if (minAge.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   RichText(
                     text: TextSpan(
-                      children: <TextSpan>[
-                        const TextSpan(text: 'Mindestalter: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      children: [
+                        const TextSpan(
+                          text: 'Mindestalter: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         TextSpan(text: minAge),
                       ],
                     ),
                   ),
                 ],
-                const Divider(),
                 if (requiredGear.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   const Text(
                   'Pflicht-Ausrüstung:',
@@ -556,8 +545,8 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
                   for (final gear in requiredGear)
                   Text('- $gear'),
                 ],
-                const Divider(),
                 if (powerLimits.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   const Text('Joule/FPS Limits:', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final limit in powerLimits)
@@ -569,8 +558,8 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
                       '\n      Pflicht: ${limit['requirement'] ?? ''}',
                     ),
                 ],
-                const Divider(),
                 if (tickets.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   const Text('Tickets:', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final ticket in tickets)
@@ -579,6 +568,7 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
                     ),
                 ],
                 if (medicContact.isNotEmpty) ...[
+                  const Divider(),
                   const SizedBox(height: 8),
                   Text('Notfallkontakt: $medicContact'),
                 ],
@@ -610,29 +600,95 @@ class _FieldReviewPage2State extends State<FieldReviewPage2> {
       builder: (context) {
         return AlertDialog(
           title: Text(name.isEmpty ? 'Paket' : name),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (price.isNotEmpty) Text('Preis: $price'),
-                if (playTime.isNotEmpty) Text('Spielzeit: $playTime'),
-                if (ageRating.isNotEmpty) Text('Altersfreigabe: $ageRating'),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text('Beschreibung: $description'),
-                ],
-                if (areas.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  const Text('Nutzbare Bereiche:'),
-                  for (final area in areas) Text('- $area'),
-                ],
-                if (notes.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text('Hinweise: $notes'),
-                ],
-              ],
-            ),
+content: SingleChildScrollView(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (price.isNotEmpty)
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              const TextSpan(
+                text: 'Preis: ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: price),
+            ],
           ),
+        ),
+      const Divider(),
+      if (playTime.isNotEmpty)
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              const TextSpan(
+                text: 'Spielzeit: ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: playTime),
+            ],
+          ),
+        ),
+      const Divider(),
+      if (ageRating.isNotEmpty)
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              const TextSpan(
+                text: 'Altersfreigabe: ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: ageRating),
+            ],
+          ),
+        ),
+      const Divider(),
+      if (description.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              const TextSpan(
+                text: 'Beschreibung: \n    ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: description),
+            ],
+          ),
+        ),
+      ],
+      const Divider(),
+      if (areas.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        const Text(
+          'Nutzbare Bereiche:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        for (final area in areas) Text('    $area'),
+      ],
+      const Divider(),
+      if (notes.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              const TextSpan(
+                text: 'Hinweise: \n    ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: notes),
+            ],
+          ),
+        ),
+      ],
+    ],
+  ),
+),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
