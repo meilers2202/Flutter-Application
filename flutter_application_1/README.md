@@ -36,6 +36,7 @@ Damit Android eine neue APK als Update über die bestehende App installiert, mü
 1. `android/key.properties.example` nach `android/key.properties` kopieren.
 2. Werte in `android/key.properties` mit eurem echten Upload-Keystore füllen.
 3. Keystore-Datei sicher aufbewahren (Backup); ohne diesen Key sind spätere Updates nicht möglich.
+4. Ohne `android/key.properties` bricht ein Release-Build jetzt absichtlich ab (Schutz vor falsch signierten APKs, die kein Update über bestehende Installationen erlauben).
 
 ### Für jedes neue Release
 

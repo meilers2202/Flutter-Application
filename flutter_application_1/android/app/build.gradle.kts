@@ -19,7 +19,17 @@ if (hasReleaseSigning) {
         keystoreProperties.load(stream)
     }
 } else {
-    logger.warn("Release signing not configured (android/key.properties not found). Release builds will use debug key and may not install as update.")
+    logger.warn("Release signing not configured (android/key.properties not found). Release build tasks will fail to prevent broken updates.")
+}
+
+val requestedTasks = gradle.startParameter.taskNames.joinToString(" ").lowercase()
+val isReleaseTaskRequested =
+    requestedTasks.contains("release") || requestedTasks.contains("bundle")
+
+if (isReleaseTaskRequested && !hasReleaseSigning) {
+    throw GradleException(
+        "Missing android/key.properties. Configure a stable release keystore before building release artifacts."
+    )
 }
 
 android {
@@ -61,11 +71,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasReleaseSigning) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
