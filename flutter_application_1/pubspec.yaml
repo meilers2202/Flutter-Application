@@ -1,7 +1,7 @@
 name: pewpew_connect # Dieses Feld muss an erster Stelle stehen
 description: Eine Airsoft App mit Login und Firebase
 publish_to: 'none' # weil lokal
-version: 2.6.8
+version: 2.6.8+2608
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -49,9 +49,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/images/ppc.jpg
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/images/ppc.jpg
+  image_path: assets/images/ppc3.jpg
+  adaptive_icon_background: "#00000000"
+  adaptive_icon_foreground: assets/images/ppc2.jpg
   remove_alpha_ios: true
 
 flutter:
@@ -59,4 +59,4 @@ flutter:
   assets:
     - assets/images/app_bgr.jpg
     - assets/images/app_bgr2.jpg
-    - assets/images/ppc.jpg
+    - assets/images/ppc3.jpg
