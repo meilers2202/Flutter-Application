@@ -87,7 +87,7 @@ class _FieldMapPageState extends State<FieldMapPage> {
         _updateDistanceEstimate();
         _infoError = _destinationLatLng == null ? 'Adresse nicht gefunden.' : null;
       } else {
-        _infoError = 'Keine Zieladresse vorhanden.';
+        _infoError = null;
       }
 
       _startPositionStream();
@@ -429,6 +429,9 @@ class _FieldMapPageState extends State<FieldMapPage> {
     final current = _currentLatLng;
     final accuracy = _accuracyMeters;
     final initial = current ?? const LatLng(0, 0);
+    final hasDestinationAddress = widget.destinationAddress?.trim().isNotEmpty ?? false;
+    final showRouteCard =
+        hasDestinationAddress && (_distanceText != null || _durationText != null || _infoError != null);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -454,6 +457,7 @@ class _FieldMapPageState extends State<FieldMapPage> {
             icon: const Icon(Icons.save, color: Colors.white),
             onPressed: _saveCurrentCity,
           ),
+          /*
           IconButton(
             tooltip: _followUser ? 'Kamera fixieren' : 'Kamera folgen',
             icon: Icon(_followUser ? Icons.my_location : Icons.location_searching, color: Colors.white),
@@ -465,6 +469,7 @@ class _FieldMapPageState extends State<FieldMapPage> {
               }
             },
           ),
+          */
         ],
       ),
       body: Stack(
@@ -542,31 +547,49 @@ class _FieldMapPageState extends State<FieldMapPage> {
                 child: Center(child: CircularProgressIndicator()),
               ),
             ),
-          if (_distanceText != null || _durationText != null || _infoError != null)
+          if (showRouteCard)
             Positioned(
               left: 12,
               right: 12,
               bottom: 12,
-              child: _RouteInfoCard(
-                distance: _distanceText,
-                duration: _durationText,
-                error: _infoError,
-                onNavigate: _openExternalMaps,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FloatingActionButton(
+                    heroTag: 'center',
+                    onPressed: () {
+                      if (current != null) {
+                        _mapController.move(current, 15);
+                      }
+                    },
+                    child: const Icon(Icons.my_location),
+                  ),
+                  const SizedBox(height: 8),
+                  _RouteInfoCard(
+                    distance: _distanceText,
+                    duration: _durationText,
+                    error: _infoError,
+                    showNavigateButton: _destinationLatLng != null,
+                    onNavigate: _openExternalMaps,
+                  ),
+                ],
+              ),
+            )
+          else
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: FloatingActionButton(
+                heroTag: 'center',
+                onPressed: () {
+                  if (current != null) {
+                    _mapController.move(current, 15);
+                  }
+                },
+                child: const Icon(Icons.my_location),
               ),
             ),
-          Positioned(
-            right: 12,
-            bottom: (_distanceText != null || _durationText != null) ? 170 : 12,
-            child: FloatingActionButton(
-              heroTag: 'center',
-              onPressed: () {
-                if (current != null) {
-                  _mapController.move(current, 15);
-                }
-              },
-              child: const Icon(Icons.my_location),
-            ),
-          ),
         ],
       ),
     );
@@ -577,12 +600,14 @@ class _RouteInfoCard extends StatelessWidget {
   final String? distance;
   final String? duration;
   final String? error;
+  final bool showNavigateButton;
   final VoidCallback onNavigate;
 
   const _RouteInfoCard({
     this.distance,
     this.duration,
     this.error,
+    this.showNavigateButton = true,
     required this.onNavigate,
   });
 
@@ -612,7 +637,7 @@ class _RouteInfoCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54),
               ),
             ),
-            if (error != null)
+            if (error != null) 
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
@@ -620,17 +645,18 @@ class _RouteInfoCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.red),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: ElevatedButton.icon(
-                  onPressed: onNavigate,
-                  icon: const Icon(Icons.directions),
-                  label: const Text('Route in Maps starten'),
+            if (showNavigateButton)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: ElevatedButton.icon(
+                    onPressed: onNavigate,
+                    icon: const Icon(Icons.directions),
+                    label: const Text('Route in Maps starten'),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

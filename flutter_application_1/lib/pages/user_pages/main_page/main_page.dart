@@ -235,66 +235,70 @@ class MainPageState extends State<MainPage> with RouteAware {
           ),
         ),
       ),
-      drawer: Drawer(
-        width: 220,
-        child: Column(
-          children: [
-            Container(
-              height: 100,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              decoration: const BoxDecoration(
-                image: DecorationImage(image: AssetImage('assets/images/app_bgr2.jpg'), fit: BoxFit.cover),
-              ),
-              child: SafeArea(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Menü', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    Builder(
-                      builder: (BuildContext context) {
-                        return IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: () => Scaffold.of(context).closeDrawer(),
-                        );
-                      },
+      drawer: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 250,
+          height: MediaQuery.of(context).size.height * 0.47,
+          child: Drawer(
+            backgroundColor: const Color.fromARGB(0, 255, 255, 255).withOpacity(0.7),
+            child: Column(
+              children: [
+                Container(
+                  height: 90,
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: SafeArea(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Menü', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                        Builder(
+                          builder: (BuildContext context) {
+                            return IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white),
+                              onPressed: () => Scaffold.of(context).closeDrawer(),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                ListTile(
+                  leading: const Icon(Icons.person),
+                  title: const Text('Profil'),
+                  onTap: () => Navigator.of(context).pushNamed('/profile'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.area_chart_outlined),
+                  title: const Text('Field-Owner'),
+                  onTap: () => Navigator.of(context).pushNamed('/fieldownerlogin'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings),
+                  title: const Text('Einstellungen'),
+                  onTap: () => Navigator.of(context).pushNamed('/settings'),
+                ),
+                const Divider(),
+                if (isAdmin)
+                  ListTile(
+                    leading: const Icon(Icons.admin_panel_settings, color: Colors.red),
+                    title: const Text('Admin-Bereich'),
+                    onTap: () => Navigator.of(context).pushNamed('/admin'),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text('Ausloggen'),
+                  onTap: _handleLogout,
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text('Version v$_version', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profil'),
-              onTap: () => Navigator.of(context).pushNamed('/profile'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.area_chart_outlined),
-              title: const Text('Field-Owner'),
-              onTap: () => Navigator.of(context).pushNamed('/fieldownerlogin'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Einstellungen'),
-              onTap: () => Navigator.of(context).pushNamed('/settings'),
-            ),
-            const Divider(),
-            if (isAdmin)
-              ListTile(
-                leading: const Icon(Icons.admin_panel_settings, color: Colors.red),
-                title: const Text('Admin-Bereich'),
-                onTap: () => Navigator.of(context).pushNamed('/admin'),
-              ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Ausloggen'),
-              onTap: _handleLogout,
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('Version v$_version', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            ),
-          ],
+          ),
         ),
       ),
       body: Stack(
